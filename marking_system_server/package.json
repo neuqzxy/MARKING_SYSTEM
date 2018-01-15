@@ -1,0 +1,22 @@
+{
+  "name": "marking_system_server",
+  "version": "1.0.0",
+  "description": "开源评分系统后端，使用socket.io和nodejs开发",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "xinzai <1843605478@qq.com>",
+  "license": "ISC",
+  "dependencies": {
+    "config-lite": "^2.1.0",
+    "connect-mongo": "^2.0.1",
+    "express": "^4.16.2",
+    "express-session": "^1.15.6",
+    "formidable": "^1.1.1",
+    "mongoose": "^4.13.9",
+    "nodemailer": "^4.4.1",
+    "socket.io": "^2.0.4",
+    "socketio-auth": "^0.1.0"
+  }
+}
