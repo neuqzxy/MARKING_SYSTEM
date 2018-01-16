@@ -4,11 +4,13 @@ export default {
     let head= document.getElementsByTagName('head')[0];
     let script= document.createElement('script')
     script.type= 'text/javascript'
-    script.onload= function(){
-      vue.prototype.$socket = io.connect(options.basePath)
-    }
     script.src= `${options.basePath}/socket.io/socket.io.js`;
     head.appendChild(script);
+    script.onload= function(){
+      vue.prototype.$io = io
+      vue.prototype.$socket = null
+      options.store.commit('setDownloadingState', {downloading: false})
+    }
     /* eslint-enable */
   }
 }

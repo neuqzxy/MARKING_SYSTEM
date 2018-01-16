@@ -2565,14 +2565,35 @@ function createWindow() {
     useContentSize: true,
     width: 1000,
     minHeight: 500,
-    minWidth: 600
+    minWidth: 600,
+    backgroundColor: '#F2F6FC',
+    title: '评分系统'
   });
 
   mainWindow.loadURL(winURL);
+  mainWindow.flag = false;
 
   mainWindow.on('closed', function () {
     mainWindow = null;
   });
+  function closeWindow(event) {
+    if (!mainWindow.flag) {
+      event.preventDefault();
+      var options = {
+        type: 'info',
+        title: '通知',
+        message: '关闭窗口会导致您断开连接，是否确认？',
+        buttons: ['是', '否']
+      };
+      __WEBPACK_IMPORTED_MODULE_0_electron__["dialog"].showMessageBox(options, function (index) {
+        if (index === 0) {
+          mainWindow.flag = true;
+          mainWindow.close();
+        }
+      });
+    }
+  }
+  mainWindow.on('close', closeWindow);
 }
 
 __WEBPACK_IMPORTED_MODULE_0_electron__["app"].on('ready', createWindow);
@@ -2587,6 +2608,12 @@ __WEBPACK_IMPORTED_MODULE_0_electron__["app"].on('activate', function () {
   if (mainWindow === null) {
     createWindow();
   }
+  createWindow();
+});
+
+__WEBPACK_IMPORTED_MODULE_0_electron__["ipcMain"].on('login-success', function () {
+  mainWindow.maximize();
+  mainWindow.setResizable(false);
 });
 /* WEBPACK VAR INJECTION */}.call(__webpack_exports__, "src/main"))
 

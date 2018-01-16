@@ -10,23 +10,34 @@
 
             </el-col>
             <el-col :span="4" class="header-col">
-                <div :class="[online ? 'online-icon' : 'offline-icon']"></div>
-                <div class="online-text">{{online ? '在线' : '离线'}}</div>
+                <div class="header-col" v-if="!downloading">
+                    <div :class="[online ? 'online-icon' : 'offline-icon']"></div>
+                    <div class="online-text">{{online ? '在线' : '离线'}}</div>
+                </div>
+                <div v-if="downloading">
+                    <svg class="icon" aria-hidden="true">
+                        <use xlink:href="#icon-xiazai"></use>
+                    </svg>
+                    <div class="downloading-text">正在下载资源</div>
+                </div>
             </el-col>
         </el-row>
     </div>
 </template>
 
 <script>
+  import { mapGetters } from 'vuex'
+
   export default {
     data () {
       return {
       }
     },
     computed: {
-      online () {
-        return this.$store.state.onLine
-      }
+      ...mapGetters({
+        online: 'getOnLine',
+        downloading: 'getDownloading'
+      })
     }
   }
 </script>
@@ -67,6 +78,9 @@
                 border-radius: 8px;
                 background: $DANGER;
                 margin-right: 5px;
+            }
+            .downloading-text {
+                font-size: 0.8em;
             }
         }
     }

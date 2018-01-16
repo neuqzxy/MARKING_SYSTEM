@@ -25,7 +25,6 @@
         justify-content: space-between;
         font-family: $FONT_FAMILY;
         color: $ONE_FONT_COLOR;
-        background: $FOUR_BORDER_COLOR;
         text-align: center;
         .header {
             height: 60px;

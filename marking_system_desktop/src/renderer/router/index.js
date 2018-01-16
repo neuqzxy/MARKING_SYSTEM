@@ -11,8 +11,7 @@ export default new Router({
     },
     {
       path: '/v0',
-      name: 'landing-page',
-      component: require('@/pages/Login').default
+      redirect: '/v0/login'
     },
     {
       path: '/v0/login',
@@ -23,6 +22,11 @@ export default new Router({
       path: '/v0/register',
       name: 'register',
       component: require('@/pages/Register').default
+    },
+    {
+      path: '/v0/hall',
+      name: 'hall',
+      component: require('@/pages/Hall').default
     },
     {
       path: '*',
