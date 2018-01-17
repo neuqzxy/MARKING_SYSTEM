@@ -14,6 +14,18 @@
                             </el-button>
                         </el-col>
                     </el-row>
+                    <hr>
+                    <el-row :gutter="10">
+                        <mark-card v-for="item in getDoingMarks"
+                                   :key="item.id"
+                                   :markName="item.markName"
+                                   :owner="item.owner"
+                                   :encrypt="item.encrypt"
+                                   :auth="item.auth"
+                                   :createDate="item.createDate"
+                                   :id="item.id"
+                        ></mark-card>
+                    </el-row>
                 </el-card>
                 <create-mark-form :creatingWork.sync="creatingWork"></create-mark-form>
             </div>
@@ -27,6 +39,8 @@
 </template>
 
 <script>
+  import { mapMutations, mapGetters } from 'vuex'
+
   export default {
     data () {
       return {
@@ -37,20 +51,49 @@
       this.initSocket()
     },
     components: {
-      'create-mark-form': () => import('../components/private/form/CreateMark')
+      'create-mark-form': () => import('../components/private/form/CreateMark'),
+      'mark-card': () => import('../components/common/markCard')
+    },
+    computed: {
+      ...mapGetters([
+        'getDoingMarks',
+        'getDoneMarks'
+      ])
     },
     methods: {
+      ...mapMutations([
+        'setDoingMarks',
+        'setDoneMarks'
+      ]),
       createWork () {
         this.creatingWork = true
       },
       initSocket () {
         if (window.$socket && window.$socket.connected) {
+          // 查询所有评分表的逻辑
           window.$socket.emit('get_all_mark')
           window.$socket.on('get_all_mark_err', data => {
             this.$message.error('查询信息出现错误')
           })
           window.$socket.on('get_all_mark_success', data => {
-            console.log(data)
+            let doingMarks = data.data.filter(item => {
+              return item.done === false
+            }).reverse()
+            let doneMarks = data.data.filter(item => {
+              return item.done === true
+            }).reverse()
+            this.setDoingMarks({doingMarks})
+            this.setDoneMarks({doneMarks})
+          })
+          // 加入评分的逻辑
+          window.$socket.on('join_mark_group_success', data => {
+            this.$message.success(`成功加入${data.markName}评分工作组`)
+          })
+          window.$socket.on('join_mark_group_error', data => {
+            this.$message.error(`加入${data.markName}失败，${data.message}`)
+          })
+          window.$socket.on('broadcast_join_mark_group_success', data => {
+            this.$message.success(data.message)
           })
         } else {
           this.$emit('您已离线，请检查您的网络')
@@ -84,9 +127,11 @@
                 .link {
                     text-align: right;
                 }
+                .left-content {
+                }
             }
             .right {
-                width: 300px;
+                min-width: 300px;
                 .title {
                     text-align: left;
                     font-weight: bolder;

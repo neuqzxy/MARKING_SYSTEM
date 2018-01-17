@@ -40,6 +40,8 @@
 </template>
 
 <script>
+  import { mapMutations, mapGetters } from 'vuex'
+
   export default {
     data () {
       return {
@@ -72,6 +74,11 @@
         required: true
       }
     },
+    computed: {
+      ...mapGetters([
+        'getDoingMarks'
+      ])
+    },
     created () {
       this.initSocket()
     },
@@ -79,13 +86,17 @@
       'rememder': () => import('../../common/Reminder.vue')
     },
     methods: {
+      ...mapMutations([
+        'setDoingMarks'
+      ]),
       beforeClose () {
         this.$emit('update:creatingWork', false)
       },
       submitForm (formName) {
         this.$refs[formName].validate((valid) => {
           if (valid) {
-            this.doCreateMark(this.createMarkForm.owner, this.createMarkForm.markName, this.createMarkForm.encrypt, this.createMarkForm.password, this.createMarkForm.auth, this.createMarkForm.privary)
+            const {owner, markName, encrypt, password, auth, privary} = this.createMarkForm
+            this.doCreateMark(owner, markName, encrypt, password, auth, privary)
           } else {
             console.log('error submit!!')
             return false
@@ -125,13 +136,15 @@
           window.$socket.on('createMark-success', data => {
             if (data.code === 1000) {
               this.$message.success('创建成功')
+              console.log(data)
+              this.setDoingMarks({doingMarks: [data.data, ...this.getDoingMarks]})
               this.$emit('update:creatingWork', false)
             }
           })
           window.$socket.on('broadcast-createMark-success', data => {
             if (data.code === 10000) {
+              this.setDoingMarks({doingMarks: [data.data, ...this.getDoingMarks]})
               this.$message.success(data.message)
-              console.log(data)
             }
           })
         } else {

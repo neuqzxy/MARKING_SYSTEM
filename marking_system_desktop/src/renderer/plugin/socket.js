@@ -8,7 +8,6 @@ export default {
     head.appendChild(script);
     script.onload= function(){
       vue.prototype.$io = io
-      vue.prototype.$socket = null
       options.store.commit('setDownloadingState', {downloading: false})
     }
     /* eslint-enable */

@@ -2605,9 +2605,6 @@ __WEBPACK_IMPORTED_MODULE_0_electron__["app"].on('window-all-closed', function (
 });
 
 __WEBPACK_IMPORTED_MODULE_0_electron__["app"].on('activate', function () {
-  if (mainWindow === null) {
-    createWindow();
-  }
   createWindow();
 });
 
