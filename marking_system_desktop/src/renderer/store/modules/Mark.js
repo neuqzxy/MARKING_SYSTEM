@@ -1,7 +1,8 @@
 // import Immutable from 'immutable'
 const state = {
   doingMarks: [],
-  doneMarks: []
+  doneMarks: [],
+  joiningMarks: []
 }
 
 const mutations = {
@@ -10,6 +11,9 @@ const mutations = {
   },
   setDoneMarks (state, payload) {
     state.doneMarks = payload.doneMarks
+  },
+  setJoiningMarks (state, payload) {
+    state.joiningMarks = payload.joiningMarks
   }
 }
 
@@ -19,6 +23,9 @@ const getters = {
   },
   getDoneMarks (state) {
     return state.doneMarks
+  },
+  getJoiningMarks (state) {
+    return state.joiningMarks
   }
 }
 

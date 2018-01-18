@@ -16,17 +16,22 @@ export default new Router({
     {
       path: '/v0/login',
       name: 'login',
-      component: require('@/pages/Login').default
+      component: require('@/pages/LoginPage').default
     },
     {
       path: '/v0/register',
       name: 'register',
-      component: require('@/pages/Register').default
+      component: require('@/pages/RegisterPage').default
     },
     {
       path: '/v0/hall',
       name: 'hall',
-      component: require('@/pages/Hall').default
+      component: require('@/pages/HallPage').default
+    },
+    {
+      path: '/v0/mark',
+      name: 'mark',
+      component: require('@/pages/MarkPage').default
     },
     {
       path: '*',

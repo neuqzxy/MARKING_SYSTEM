@@ -11,7 +11,7 @@ module.exports = socket => {
             id: item._id,
             markName: item.markName,
             encrypt: item.encrypt,
-            aurh: item.auth,
+            auth: item.auth,
             createDate: item.createDate,
             owner: item.owner.username,
             member: item.members,

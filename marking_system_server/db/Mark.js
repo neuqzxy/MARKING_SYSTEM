@@ -28,11 +28,18 @@ const MarkSchema = mongoose.Schema({
   charts: [
     {
       username: String,
+      sex: String,
+      age: Number,
+      otherMessage: String,
       scores: [
         {
           username: String,
           id: String,
-          score: Number
+          score: Number,
+          createDate: {
+            type: Date,
+            default: Date.now
+          }
         }
       ],
       createDate: {

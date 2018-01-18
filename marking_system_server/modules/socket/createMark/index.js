@@ -23,9 +23,9 @@ module.exports = (socket) => {
               if (err) {
                 socket.emit('createMark-formErr', {code: 5001, message: '表单存储失败'})
               } else {
-                User.update({username: owner}, {$push: {marks: {markName, id: docs._id, owner: true, password, auth, privary, encrypt}}}, {}, (err, docs) => {
+                User.update({username: owner}, {$push: {marks: {markName, id: docs._id, owner: true, password, auth, privary, encrypt}}}, {}, (err) => {
                   if (err) {
-                    Mark.remove({_id: docs._id}, (err, docs) => {
+                    Mark.remove({_id: docs._id}, (err) => {
                       if (err) {
                         socket.emit('createMark-err', {code: 5003, message: '发生未知错误，请联系管理员'})
                       } else {
@@ -37,7 +37,7 @@ module.exports = (socket) => {
                       id: docs._id,
                       markName: markName,
                       encrypt: encrypt,
-                      aurh: auth,
+                      auth: auth,
                       createDate: docs.createDate,
                       owner: owner,
                       done: false

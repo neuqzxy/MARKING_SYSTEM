@@ -29,6 +29,9 @@ const UserSchema = mongoose.Schema({
       charts: [
         {
           username: String,
+          sex: String,
+          age: Number,
+          otherMessage: String,
           score: Number
         }
       ]

@@ -32,6 +32,8 @@
 </template>
 
 <script>
+  import getDate from '../../util/getDate'
+
   export default {
     data () {
       return {}
@@ -58,13 +60,7 @@
     },
     computed: {
       getCreateDate () {
-        let time = new Date(this.createDate)
-        let year = time.getFullYear()
-        let mouth = time.getMonth() + 1
-        let day = time.getDay()
-        let hour = time.getHours()
-        let minute = time.getMinutes()
-        let second = time.getSeconds()
+        const {year, mouth, day, hour, minute, second} = getDate(this.createDate)
         return `${year}年-${mouth}月-${day}日-${hour}时-${minute}分-${second}秒`
       }
     },
@@ -84,10 +80,6 @@
               password: value
             })
           }).catch(() => {
-            this.$message({
-              type: 'info',
-              message: '取消输入'
-            })
           })
         }
       }
