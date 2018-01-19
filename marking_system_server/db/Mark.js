@@ -31,10 +31,11 @@ const MarkSchema = mongoose.Schema({
       sex: String,
       age: Number,
       otherMessage: String,
+      creator: String,
+      personId: String,
       scores: [
         {
           username: String,
-          id: String,
           score: Number,
           createDate: {
             type: Date,

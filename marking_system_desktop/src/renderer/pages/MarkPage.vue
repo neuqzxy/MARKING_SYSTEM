@@ -15,10 +15,10 @@
                                     <h2 style="text-align: left;"><span style="cursor: pointer;" @click="changeSortState(item._id)">总榜单<i :style="{'margin-left': sort === 'bigToSmall' ? '0' : '-12px'}" :class="sort === 'bigToSmall' ? 'el-icon-sort-down' : 'el-icon-sort-up'"></i></span></h2>
                                 </el-col>
                                 <el-col :span="10" style="text-align: right;">
-                                    <el-button type="text" @click="addMessage">添加信息</el-button>
+                                    <el-button type="text" @click="changeFormState">添加信息</el-button>
                                 </el-col>
                             </el-row>
-                            <my-table :tableTitle="tableTitle" :tableData="tableData[item._id]" :roomsId="item._id"></my-table>
+                            <my-table :markId="item._id" :changeFormState="changeFormState" :tableTitle="tableTitle" :tableData="tableData[item._id]" :roomsId="item._id"></my-table>
                         </el-card>
                     </el-col>
                     <el-col :span="14">
@@ -27,22 +27,26 @@
                             <hr>
                             <el-form :model="tableForm" :rules="rules" ref="tableForm" label-width="100px">
                                 <el-form-item label="姓名" prop="username">
-                                    <el-input v-model="tableForm.username"></el-input>
+                                    <el-input :disabled="formState === 'editing'" v-model="tableForm.username"></el-input>
                                 </el-form-item>
                                 <el-form-item label="年龄" prop="age">
-                                    <el-input-number v-model="tableForm.age" :min="1" :max="100"></el-input-number>
+                                    <el-input-number :disabled="formState === 'editing'" v-model="tableForm.age" :min="1" :max="100"></el-input-number>
                                 </el-form-item>
                                 <el-form-item label="性别" prop="sex">
-                                    <el-radio-group v-model="tableForm.sex">
+                                    <el-radio-group :disabled="formState === 'editing'" v-model="tableForm.sex">
                                         <el-radio label="man">男</el-radio>
                                         <el-radio label="woman">女</el-radio>
                                     </el-radio-group>
                                 </el-form-item>
                                 <el-form-item label="其他信息" prop="otherMessage">
-                                    <el-input type="textarea" v-model="tableForm.otherMessage"></el-input>
+                                    <el-input :disabled="formState === 'editing'" type="textarea" v-model="tableForm.otherMessage"></el-input>
+                                </el-form-item>
+                                <el-form-item  v-if="formState === 'editing'" label="分数" prop="score">
+                                    <el-input-number v-model="tableForm.score" :min="0" :max="100"></el-input-number>
                                 </el-form-item>
                                 <el-form-item style="text-align: left;">
-                                    <el-button type="primary" @click="submitForm('tableForm', item.markName, item._id)">提交</el-button>
+                                    <el-button v-if="formState === 'creating'" type="primary" @click="submitForm('tableForm', item.markName, item._id)">提交</el-button>
+                                    <el-button v-if="formState === 'editing'" type="primary" @click="giveScore(item.markName, item._id)">评分</el-button>
                                 </el-form-item>
                             </el-form>
                         </el-card>
@@ -66,8 +70,10 @@
         tableForm: {
           username: '',
           age: 0,
+          score: 0,
           sex: 'man',
-          otherMessage: ''
+          otherMessage: '',
+          id: ''
         },
         tableData: {},
         tableTitle: [
@@ -120,6 +126,7 @@
         })
         window.$socket.on('get_mark_rooms_success', data => {
           this.setJoiningMarks({joiningMarks: data.data})
+          console.log(data)
           for (let i of data.data) {
             this.$set(this.tableData, i._id, [...i.charts])
           }
@@ -128,21 +135,45 @@
           this.$message.error(data.message)
         })
         window.$socket.on('broadcast_add_person_success', data => {
+          this.tableData[data.reqData.id].push(data.resData)
           this.$message.success(data.message)
         })
         window.$socket.on('add_person_success', data => {
+          this.tableData[data.reqData.id].push(data.resData)
+          console.log(data.resData)
           this.$message.success(data.message)
+        })
+        window.$socket.on('give_score_error', data => {
+          this.$message.error(data.message)
+        })
+        window.$socket.on('give_score_success', data => {
+          this.$message.success(data.message)
+          console.log(data)
         })
       },
       changeSortState (id) {
         this.tableData[id].reverse()
         this.sort = (this.sort === 'bigToSmall') ? 'smallToBig' : 'bigToSmall'
       },
-      addMessage () {
-        this.formState = 'creating'
+      changeFormState (id, markId, type) {
+        this.formState = type === 'editing' ? 'editing' : 'creating'
+        if (this.formState === 'creating') {
+          this.tableForm = {username: '', age: 0, sex: 'man', otherMessage: '', score: 0}
+        } else {
+          const data = this.tableData[markId].filter(item => {
+            return item._id === id
+          })[0]
+          this.tableForm = {
+            username: data.username,
+            age: data.age,
+            sex: data.sex,
+            otherMessage: data.otherMessage,
+            personId: data.personId
+          }
+          console.log(this.tableForm)
+        }
       },
       submitForm (formName, markName, id) {
-        console.log(this.$refs[formName])
         this.$refs[formName][0].validate((valid) => {
           if (valid) {
             const {username, sex, age, otherMessage} = this.tableForm
@@ -151,6 +182,16 @@
             console.log('error submit!!')
             return false
           }
+        })
+      },
+      giveScore (markName, markId, personId) {
+        window.$socket.emit('give_score', {
+          score: this.tableForm.score || 0,
+          markName,
+          markId: markId,
+          personId: this.tableForm.personId,
+          username: this.$store.state.UserMessage.username,
+          personName: this.tableForm.username
         })
       }
     }

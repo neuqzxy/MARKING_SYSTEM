@@ -17,6 +17,7 @@
     "mongoose": "^4.13.9",
     "nodemailer": "^4.4.1",
     "socket.io": "^2.0.4",
-    "socketio-auth": "^0.1.0"
+    "socketio-auth": "^0.1.0",
+    "uuid": "^3.2.1"
   }
 }

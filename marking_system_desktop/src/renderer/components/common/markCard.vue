@@ -33,6 +33,7 @@
 
 <script>
   import getDate from '../../util/getDate'
+  import {mapGetters} from 'vuex'
 
   export default {
     data () {
@@ -59,6 +60,7 @@
       }
     },
     computed: {
+      ...mapGetters(['getDoingMarks']),
       getCreateDate () {
         const {year, mouth, day, hour, minute, second} = getDate(this.createDate)
         return `${year}年-${mouth}月-${day}日-${hour}时-${minute}分-${second}秒`
@@ -74,10 +76,16 @@
             inputPattern: /^\w{3,10}$/,
             inputErrorMessage: '密码格式不正确'
           }).then(({ value }) => {
+            const data = this.getDoingMarks.filter(item => {
+              return item.id === this.id
+            })[0]
+            delete data.createDate
             window.$socket.emit('join_mark_group', {
               markName: this.markName,
               id: this.id,
-              password: value
+              password: value,
+              username: this.$store.state.UserMessage.username,
+              data
             })
           }).catch(() => {
           })

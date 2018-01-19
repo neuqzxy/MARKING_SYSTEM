@@ -32,9 +32,17 @@ const UserSchema = mongoose.Schema({
           sex: String,
           age: Number,
           otherMessage: String,
-          score: Number
+          personId: String
         }
       ]
+    }
+  ],
+  scores: [
+    {
+      markId: String,
+      personId: String,
+      score: Number,
+      personName: String
     }
   ]
 });

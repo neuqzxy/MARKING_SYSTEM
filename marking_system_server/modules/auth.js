@@ -10,6 +10,7 @@ const getAllMark = require('./socket/getAllMark/index')
 const joinMark = require('./socket/joinMark/index')
 const getMarkRooms = require('./socket/getMarkRooms/index')
 const addPerson = require('./socket/addPerson/index')
+const giveScore = require('./socket/giveScore/index')
 const md5 = require('./common/md5')
 
 module.exports = {
@@ -30,12 +31,15 @@ module.exports = {
   postAuthenticate(socket, data) {
     socket.client.username = data.username;
     socket.client.rooms = new Set()
+    socket.client.realNameRooms = new Set()
+    socket.client.notRealNameRooms = new Set()
     console.log('连接成功', socket.client.username, socket.id);
     createMark(socket)
     getAllMark(socket)
     joinMark(socket)
     getMarkRooms(socket)
     addPerson(socket)
+    giveScore(socket)
   },
   disconnect(socket) {
     console.log(socket.id + ' disconnected');
