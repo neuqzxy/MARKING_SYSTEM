@@ -1,15 +1,12 @@
 <template>
     <div class="header">
         <el-row :gutter="10" style="width: 100%;">
-            <el-col :span="15" class="header-col">
+            <el-col :span="18" class="header-col">
                 <div class="title">
                     <router-link :to="`/${this.$myVersion}`" class="link"><span class="link">评 分 系 统</span></router-link>
                 </div>
             </el-col>
-            <el-col :span="5" class="header-col">
-
-            </el-col>
-            <el-col :span="4" class="header-col">
+            <el-col :span="3" class="header-col">
                 <div class="header-col" v-if="!downloading">
                     <div :class="[online ? 'online-icon' : 'offline-icon']"></div>
                     <div class="online-text">{{online ? '在线' : '离线'}}</div>
@@ -20,6 +17,9 @@
                     </svg>
                     <div class="downloading-text">正在下载资源</div>
                 </div>
+            </el-col>
+            <el-col :span="3">
+                <div class="header-col"><span style="cursor: pointer" @click="goUserPage">{{online ? getUsername : ''}}</span></div>
             </el-col>
         </el-row>
     </div>
@@ -36,8 +36,14 @@
     computed: {
       ...mapGetters({
         online: 'getOnLine',
-        downloading: 'getDownloading'
+        downloading: 'getDownloading',
+        getUsername: 'getUsername'
       })
+    },
+    methods: {
+      goUserPage () {
+        this.$router.push({name: 'userPage', params: {username: this.getUsername}})
+      }
     }
   }
 </script>

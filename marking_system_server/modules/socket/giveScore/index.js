@@ -48,10 +48,12 @@ module.exports = socket => {
                         })
                       } else {
                         socket.emit('give_score_success', {message: '评分成功', reqData: data})
+                        socket.to(data.markId).emit('broadcast_give_score_success', {message: '评分成功', reqData: data})
                       }
                     })
                   } else {
                     socket.emit('give_score_success', {message: '评分成功', reqData: data})
+                    socket.to(data.markId).emit('broadcast_give_score_success', {message: '评分成功', reqData: data})
                   }
                 }
               })

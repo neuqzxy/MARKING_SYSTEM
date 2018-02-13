@@ -34,6 +34,11 @@ export default new Router({
       component: require('@/pages/MarkPage').default
     },
     {
+      path: '/v0/user/:username',
+      name: 'userPage',
+      component: require('@/pages/UserPage').default
+    },
+    {
       path: '*',
       component: require('@/pages/Page404').default
     }

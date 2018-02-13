@@ -7,7 +7,7 @@
                 <el-input v-model="ruleForm.username"></el-input>
             </el-form-item>
             <el-form-item label="密码" prop="password" class="form-item">
-                <el-input v-model="ruleForm.password"></el-input>
+                <el-input type="password" v-model="ruleForm.password"></el-input>
             </el-form-item>
             <el-form-item class="form-item">
                 <el-button :disabled="downloading" class="btn" type="primary" @click="submitForm('loginForm')">立即登录</el-button>

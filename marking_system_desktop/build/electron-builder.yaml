@@ -1,7 +1,7 @@
 directories:
   output: build
   buildResources: build
-productName: marking_system_desktop
+productName: 评分系统
 appId: org.simulatedgreg.electron-vue
 files:
   - dist/electron/**/*

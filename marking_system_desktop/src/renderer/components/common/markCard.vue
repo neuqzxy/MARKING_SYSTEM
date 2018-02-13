@@ -26,7 +26,12 @@
                     <span style="font-weight: lighter; font-size: 0.8em;">{{getCreateDate}}</span>
                 </el-col>
             </el-row>
-            <div class="text-line" :style="{color: auth ? '#67C23A' : '#E6A23C'}">{{auth ? '实名评分' : '匿名评分'}}</div>
+            <div class="text-line" :style="{color: auth ? '#67C23A' : '#E6A23C', textAlign: 'center'}">{{auth ? '实名评分' : '匿名评分'}}</div>
+            <div class="text-line" style="text-align: center">id: <span style="color: #409EFF"> {{id}}</span></div>
+            <div class="text-line" style="text-align: center">
+                <span v-if="privary" style="color: #F56C6C">不公开</span>
+                <span v-if="!privary" style="color: #67C23A">公开</span>
+            </div>
         </el-card>
     </el-col>
 </template>
@@ -57,10 +62,13 @@
       },
       id: {
         type: String
+      },
+      privary: {
+        type: Boolean
       }
     },
     computed: {
-      ...mapGetters(['getDoingMarks']),
+      ...mapGetters(['getDoingMarks', 'getSearchedMarks', 'getMyMarks']),
       getCreateDate () {
         const {year, mouth, day, hour, minute, second} = getDate(this.createDate)
         return `${year}年-${mouth}月-${day}日-${hour}时-${minute}分-${second}秒`
@@ -76,9 +84,19 @@
             inputPattern: /^\w{3,10}$/,
             inputErrorMessage: '密码格式不正确'
           }).then(({ value }) => {
-            const data = this.getDoingMarks.filter(item => {
+            let data = this.getDoingMarks.filter(item => {
               return item.id === this.id
             })[0]
+            if (!data) {
+              data = this.getSearchedMarks.filter(item => {
+                return item._id === this.id
+              })[0]
+            }
+            if (!data) {
+              data = this.getMyMarks.filter(item => {
+                return item._id === this.id
+              })[0]
+            }
             delete data.createDate
             window.$socket.emit('join_mark_group', {
               markName: this.markName,
@@ -87,7 +105,8 @@
               username: this.$store.state.UserMessage.username,
               data
             })
-          }).catch(() => {
+          }).catch(err => {
+            this.$message.error(`发生错误${err.message}`)
           })
         }
       }

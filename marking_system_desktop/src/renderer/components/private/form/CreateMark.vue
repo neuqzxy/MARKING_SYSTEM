@@ -15,7 +15,7 @@
                     </el-radio-group>
                 </el-form-item>
                 <el-form-item label="密码" prop="password" v-if="createMarkForm.encrypt">
-                    <el-input v-model="createMarkForm.password"></el-input>
+                    <el-input type="password" v-model="createMarkForm.password"></el-input>
                 </el-form-item>
                 <el-form-item label="权限设置" prop="encrypt">
                     <el-radio-group v-model="createMarkForm.auth">
@@ -25,8 +25,8 @@
                 </el-form-item>
                 <el-form-item label="保密设置" prop="encrypt">
                     <el-radio-group v-model="createMarkForm.privary">
-                        <el-radio :label="true">公开</el-radio>
-                        <el-radio :label="false">不公开</el-radio>
+                        <el-radio :label="true">不公开</el-radio>
+                        <el-radio :label="false">公开</el-radio>
                     </el-radio-group>
                 </el-form-item>
                 <el-form-item style="text-align: left">
@@ -46,7 +46,7 @@
     data () {
       return {
         createMarkForm: {
-          owner: this.$route.query.username,
+          owner: this.$route.query.username || this.$store.state.UserMessage.username,
           markName: '',
           encrypt: true,
           password: '',
@@ -137,7 +137,9 @@
             if (data.code === 1000) {
               this.$message.success('创建成功')
               console.log(data)
-              this.setDoingMarks({doingMarks: [data.data, ...this.getDoingMarks]})
+              if (!data.data.encrypt) {
+                this.setDoingMarks({doingMarks: [data.data, ...this.getDoingMarks]})
+              }
               this.$emit('update:creatingWork', false)
             }
           })

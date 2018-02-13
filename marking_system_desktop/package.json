@@ -19,7 +19,7 @@
     "postinstall": "npm run lint:fix"
   },
   "build": {
-    "productName": "marking_system_desktop",
+    "productName": "评分系统",
     "appId": "org.simulatedgreg.electron-vue",
     "directories": {
       "output": "build"

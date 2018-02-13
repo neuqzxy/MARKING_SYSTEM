@@ -41,11 +41,12 @@
                             <mark-card v-for="item in doingMarks || getDoingMarks"
                                        :key="item.id"
                                        :markName="item.markName"
-                                       :owner="item.owner"
+                                       :owner="item.owner.username ? item.owner.username : item.owner"
                                        :encrypt="item.encrypt"
                                        :auth="item.auth"
+                                       :privary="item.privary"
                                        :createDate="item.createDate"
-                                       :id="item.id"
+                                       :id="item.id || item._id"
                             ></mark-card>
                             <div v-if="doingMarks && doingMarks.length === 0">暂时没有公开的评分工作</div>
                         </el-row>
@@ -94,7 +95,8 @@
     methods: {
       ...mapMutations([
         'setDoingMarks',
-        'setDoneMarks'
+        'setDoneMarks',
+        'setSearchedMarks'
       ]),
       createWork () {
         this.creatingWork = true
@@ -129,6 +131,15 @@
           window.$socket.on('broadcast_join_mark_group_success', data => {
             this.$message.success(data.message)
           })
+          // 搜索某个评分
+          window.$socket.on('get_mark_by_id_success', data => {
+            console.log(data.data)
+            this.doingMarks = data.data
+            this.setSearchedMarks({searchedMarks: data.data})
+          })
+          window.$socket.on('get_mark_by_id_error', data => {
+            this.$message.error(data.message)
+          })
         } else {
           this.$emit('您已离线，请检查您的网络')
         }
@@ -156,11 +167,15 @@
         cb(results)
       },
       handleSelect (item) {
-        console.log(item)
         if (item.id) {
           this.doingMarks = [item]
         } else {
           this.doingMarks = []
+          if (item) {
+            window.$socket.emit('get_mark_by_id', {
+              id: item.value
+            })
+          }
         }
       },
       beginMark () {

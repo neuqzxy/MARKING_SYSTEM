@@ -6,10 +6,10 @@
                 <el-input v-model="ruleForm.username"></el-input>
             </el-form-item>
             <el-form-item class="form-item" label="密码" prop="password">
-                <el-input v-model="ruleForm.password"></el-input>
+                <el-input type="password" v-model="ruleForm.password"></el-input>
             </el-form-item>
             <el-form-item class="form-item" label="重复密码" prop="rePassword">
-                <el-input v-model="ruleForm.rePassword"></el-input>
+                <el-input type="password" v-model="ruleForm.rePassword"></el-input>
             </el-form-item>
             <el-form-item class="form-item" label="邮箱" prop="email">
                 <el-input v-model="ruleForm.email"></el-input>
