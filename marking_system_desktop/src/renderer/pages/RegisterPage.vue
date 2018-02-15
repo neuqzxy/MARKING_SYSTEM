@@ -121,6 +121,7 @@
               switch (res.data.code) {
                 case 1000:
                   this.$message.success('注册成功')
+                  this.$router.push({name: 'login'})
                   break
                 case 1004:
                   this.$message.error('请求出现未知错误')

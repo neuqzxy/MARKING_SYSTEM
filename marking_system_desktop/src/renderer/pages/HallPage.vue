@@ -41,12 +41,12 @@
                             <mark-card v-for="item in doingMarks || getDoingMarks"
                                        :key="item.id"
                                        :markName="item.markName"
-                                       :owner="item.owner.username ? item.owner.username : item.owner"
+                                       :owner="item.owner"
                                        :encrypt="item.encrypt"
                                        :auth="item.auth"
                                        :privary="item.privary"
                                        :createDate="item.createDate"
-                                       :id="item.id || item._id"
+                                       :id="item.id"
                             ></mark-card>
                             <div v-if="doingMarks && doingMarks.length === 0">暂时没有公开的评分工作</div>
                         </el-row>
@@ -133,7 +133,6 @@
           })
           // 搜索某个评分
           window.$socket.on('get_mark_by_id_success', data => {
-            console.log(data.data)
             this.doingMarks = data.data
             this.setSearchedMarks({searchedMarks: data.data})
           })

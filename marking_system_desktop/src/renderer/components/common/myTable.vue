@@ -5,10 +5,10 @@
         </el-row>
         <transition-group name="flip-list" tag="ul">
             <el-row class="my-table-col" v-for="item in tableData" :key="item._id" @click.native="changeFormState(item._id, markId, 'editing')">
-                <el-col :key="item.username" :span="6" >{{item.username}}</el-col>
-                <el-col :key="item.age" :span="6" >{{item.age}}</el-col>
-                <el-col :key="item.sex" :span="6" >{{item.sex === 'man' ? '男' : '女'}}</el-col>
-                <el-col :key="item.username + 'score'" :span="6" >{{scores[item.personId] === void 0 ? '暂无' : scores[item.personId] }}</el-col>
+                <el-col style="text-align: center" :key="item.username" :span="6" >{{item.username}}</el-col>
+                <el-col style="text-align: center" :key="item.age" :span="6" >{{item.age}}</el-col>
+                <el-col style="text-align: center" :key="item.sex" :span="6" >{{item.sex === 'man' ? '男' : '女'}}</el-col>
+                <el-col style="text-align: center" :key="item.username + 'score'" :span="6" >{{scores[item.personId] === void 0 ? '暂无' : scores[item.personId] }}</el-col>
             </el-row>
         </transition-group>
     </div>

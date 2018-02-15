@@ -1,10 +1,11 @@
-// import Immutable from 'immutable'
+import {fromJS} from 'immutable'
 const state = {
   doingMarks: [],
   doneMarks: [],
   joiningMarks: [],
   searchedMarks: [],
-  myMarks: []
+  myMarks: [],
+  tableData: fromJS({})
 }
 
 const mutations = {
@@ -22,6 +23,9 @@ const mutations = {
   },
   setMyMarks (state, payload) {
     state.myMarks = payload.myMarks
+  },
+  setTableData (state, payload) {
+    state.tableData = payload.tableData
   }
 }
 
@@ -40,6 +44,9 @@ const getters = {
   },
   getMyMarks (state) {
     return state.myMarks
+  },
+  getTableData (state) {
+    return state.tableData.toJS()
   }
 }
 

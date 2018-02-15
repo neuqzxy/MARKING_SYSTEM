@@ -1,4 +1,3 @@
-// import Immutable from 'immutable'
 const state = {
   onLine: false,
   downloading: true

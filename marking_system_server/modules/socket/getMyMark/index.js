@@ -6,6 +6,19 @@ module.exports = socket => {
         if (err) {
           socket.emit('get_my_marks_error', {message: '非法的操作'})
         } else {
+          const data = docs.map(item => {
+            return {
+              id: item._id,
+              markName: item.markName,
+              encrypt: item.encrypt,
+              auth: item.auth,
+              privary: item.privary,
+              createDate: item.createDate,
+              owner: item.owner.username,
+              member: item.members,
+              done: item.done
+            }
+          })
           socket.emit('get_my_marks_success', {message: '获取信息成功', data: docs})
         }
       })

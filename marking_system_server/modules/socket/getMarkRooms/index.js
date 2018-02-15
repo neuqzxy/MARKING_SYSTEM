@@ -7,7 +7,14 @@ module.exports = socket => {
         if (err) {
           socket.emit('get_mark_rooms_error', {message: '查询出错'})
         } else {
-          socket.emit('get_mark_rooms_success', {message: '查询成功', data: docs})
+          const data = docs.map(item => {
+            return {
+              id: item._id,
+              markName: item.markName,
+              charts: item.charts,
+            }
+          })
+          socket.emit('get_mark_rooms_success', {message: '查询成功', data})
         }
       })
     } else {

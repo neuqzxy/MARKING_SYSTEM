@@ -6,19 +6,20 @@
             <el-breadcrumb-item>评分</el-breadcrumb-item>
         </el-breadcrumb>
         <el-tabs type="border-card" class="mark-page-content">
-            <el-tab-pane style="height: 100%;" :label="item.markName" :key="item._id" v-for="item in joiningMarks">
+            <el-tab-pane style="height: 100%;" :label="item.markName" :key="item.id" v-for="item in joiningMarks">
                 <el-row :gutter="10" style="height: 100%;">
                     <el-col :span="10">
                         <el-card>
                             <el-row :gutter="10">
                                 <el-col :span="14">
-                                    <h2 style="text-align: left;"><span style="cursor: pointer;" @click="changeSortState(item._id)">总榜单<i :style="{'margin-left': sort === 'bigToSmall' ? '0' : '-12px'}" :class="sort === 'bigToSmall' ? 'el-icon-sort-down' : 'el-icon-sort-up'"></i></span></h2>
+                                    <h2 style="text-align: left;"><span style="cursor: pointer;" @click="changeSortState(item.id)">总榜单<i :style="{'margin-left': sort === 'bigToSmall' ? '0' : '-12px'}" :class="sort === 'bigToSmall' ? 'el-icon-sort-down' : 'el-icon-sort-up'"></i></span></h2>
                                 </el-col>
                                 <el-col :span="10" style="text-align: right;">
+                                    <el-button type="text" @click="goBigBD(item.id)">大榜单</el-button>
                                     <el-button type="text" @click="changeFormState">添加信息</el-button>
                                 </el-col>
                             </el-row>
-                            <my-table :scores="scores" :markId="item._id" :changeFormState="changeFormState" :tableTitle="tableTitle" :tableData="tableData[item._id]" :roomsId="item._id"></my-table>
+                            <my-table :scores="scores" :markId="item.id" :changeFormState="changeFormState" :tableTitle="tableTitle" :tableData="tableData[item.id]" :roomsId="item.id"></my-table>
                         </el-card>
                     </el-col>
                     <el-col :span="14">
@@ -55,8 +56,8 @@
                                     </el-row>
                                 </div>
                                 <el-form-item style="text-align: left;">
-                                    <el-button v-if="formState === 'creating'" type="primary" @click="submitForm('tableForm', item.markName, item._id)">提交</el-button>
-                                    <el-button v-if="formState === 'editing'" type="primary" @click="giveScore(item.markName, item._id)">评分</el-button>
+                                    <el-button v-if="formState === 'creating'" type="primary" @click="submitForm('tableForm', item.markName, item.id)">提交</el-button>
+                                    <el-button v-if="formState === 'editing'" type="primary" @click="giveScore(item.markName, item.id)">评分</el-button>
                                 </el-form-item>
                             </el-form>
                         </el-card>
@@ -68,8 +69,10 @@
 </template>
 
 <script>
-  import { mapMutations } from 'vuex'
+  import { mapMutations, mapGetters } from 'vuex'
+  import {fromJS} from 'immutable'
   import api from '../config/api.config'
+  import ElButton from '../../../node_modules/element-ui/packages/button/src/button.vue'
 
   export default {
     data () {
@@ -77,6 +80,7 @@
         api,
         sort: 'bigToSmall',
         formState: 'creating',
+        // 右侧表格中的数据，用户填写的表单数据
         tableForm: {
           username: '',
           age: 0,
@@ -86,6 +90,7 @@
           id: ''
         },
         scores: {},
+        // 记录加入的评分组的信息
         joiningMarks: {},
         // 当前选中的人的信息
         selectedMessage: {
@@ -126,13 +131,26 @@
         username: this.$store.state.UserMessage.username
       })
     },
+    destroyed () {
+      this.OffSocket()
+    },
     components: {
+      ElButton,
       'my-table': () => import('../components/common/myTable')
     },
+    computed: {
+      ...mapGetters(['getTableData'])
+    },
     watch: {
+      // 排序
+      getTableData (value) {
+        this.tableData = value
+        this.setScores()
+      },
       scores: {
         handler (value) {
-          let scores = Object.keys(value).sort((x, y) => this.scores[y] - this.scores[x])
+          // 将分数排序，和void 0做比较是为了让没有打分的排在后面
+          let scores = Object.keys(value).sort((x, y) => (this.scores[y] === void 0 ? -1 : this.scores[y]) - (this.scores[x] === void 0 ? -1 : this.scores[x]))
           const keys = Object.keys(this.tableData)
           const newTableData = {}
           for (let personId of scores) {
@@ -153,36 +171,53 @@
               }
             }
           }
-          this.tableData = newTableData
+          this.setTableData({tableData: fromJS(newTableData)})
         },
         deep: true
       }
     },
     methods: {
       ...mapMutations([
-        'setJoiningMarks'
+        'setJoiningMarks',
+        'setTableData'
       ]),
+      goBigBD (id) {
+        this.$router.push({name: 'bigList', params: {id}})
+      },
       initSocket () {
         window.$socket.on('get_mark_rooms_error', data => {
           this.$message.error(data.message)
         })
         window.$socket.on('get_mark_rooms_success', data => {
           /* this.setJoiningMarks({joiningMarks: data.data}) */
-          this.joiningMarks = data.data
+          this.joiningMarks = data.data.map(item => {
+            return {id: item.id, markName: item.markName}
+          })
+          let tableData = this.getTableData
           for (let i of data.data) {
-            this.$set(this.tableData, i._id, JSON.parse(JSON.stringify(i.charts)))
+            /* this.$set(this.tableData, i.id, JSON.parse(JSON.stringify(i.charts)))
+            this.setTableData({tableData: fromJS(this.tableData)}) */
+            tableData[i.id] = i.charts
+            this.setTableData({tableData: fromJS(tableData)})
           }
-          this.setScores()
+          // this.setScores()
         })
         window.$socket.on('add_person_error', data => {
           this.$message.error(data.message)
         })
         window.$socket.on('broadcast_add_person_success', data => {
-          this.tableData[data.reqData.id].push({...data.resData, scores: []})
+          // this.tableData[data.reqData.id].push({...data.resData, scores: []})
+          let tableData = this.getTableData
+          tableData[data.reqData.id].push({...data.resData, scores: []})
+          this.setTableData({tableData: fromJS(tableData)})
           this.$message.success(data.message)
         })
         window.$socket.on('add_person_success', data => {
-          this.tableData[data.reqData.id].push({...data.resData, scores: []})
+          /* this.tableData[data.reqData.id].push({...data.resData, scores: []})
+          this.setTableData({tableData: fromJS(this.tableData)}) */
+          let tableData = this.getTableData
+          tableData[data.reqData.id].push({...data.resData, scores: []})
+          this.setTableData({tableData: fromJS(tableData)})
           this.$message.success(data.message)
         })
         window.$socket.on('give_score_error', data => {
@@ -190,9 +225,12 @@
         })
         window.$socket.on('give_score_success', data => {
           this.$message.success(data.message)
-          // 如果有，就修改，否则，就添加
+          // 如果打过了分，就修改，否则，就添加
           let flag = false
-          let scores = this.tableData[data.reqData.markId].filter(item => item.personId === data.reqData.personId)[0].scores
+          // 用于修改scores，（利用原生js Array地址不变的特性，很危险）
+          let tableData = this.getTableData
+          let __tableData = tableData[data.reqData.markId]
+          let scores = __tableData.filter(item => item.personId === data.reqData.personId)[0].scores
           for (let score of scores) {
             if (score.username === data.reqData.username) {
               score.score = data.reqData.score
@@ -200,14 +238,17 @@
             }
           }
           if (!flag) {
-            scores = scores.push({username: data.reqData.username, score: data.reqData.score})
+            scores.push({username: data.reqData.username, score: data.reqData.score})
           }
-          this.setScores()
+          this.setTableData({tableData: fromJS(tableData)})
         })
         window.$socket.on('broadcast_give_score_success', data => {
-          // 如果有，就修改，否则，就添加
+          // 如果打过了分，就修改，否则，就添加
           let flag = false
-          let scores = this.tableData[data.reqData.markId].filter(item => item.personId === data.reqData.personId)[0].scores
+          // 用于修改scores，（利用原生js Array地址不变的特性，很危险）
+          let tableData = this.getTableData
+          let __tableData = tableData[data.reqData.markId]
+          let scores = __tableData.filter(item => item.personId === data.reqData.personId)[0].scores
           for (let score of scores) {
             if (score.username === data.reqData.username) {
               score.score = data.reqData.score
@@ -215,10 +256,22 @@
             }
           }
           if (!flag) {
-            scores = scores.push({username: data.reqData.username, score: data.reqData.score})
+            scores.push({username: data.reqData.username, score: data.reqData.score})
           }
-          this.setScores()
+          this.setTableData({tableData: fromJS(tableData)})
         })
+      },
+      OffSocket () {
+        if (window.$socket && window.$socket.off) {
+          window.$socket.off('get_mark_rooms_error')
+          window.$socket.off('get_mark_rooms_success')
+          window.$socket.off('add_person_error')
+          window.$socket.off('broadcast_add_person_success')
+          window.$socket.off('add_person_success')
+          window.$socket.off('give_score_error')
+          window.$socket.off('give_score_success')
+          window.$socket.off('broadcast_give_score_success')
+        }
       },
       changeSortState (id) {
         this.tableData[id].reverse()
@@ -266,16 +319,16 @@
       setScores () {
         let keys = Object.keys(this.tableData)
         for (let key of keys) {
-          for (let personMsg of this.tableData[key]) {
+          for (let personInfo of this.tableData[key]) {
             let score = void 0
-            if (personMsg.scores.length > 0) {
+            if (personInfo.scores.length > 0) {
               score = 0
-              personMsg.scores.forEach(item => {
+              personInfo.scores.forEach(item => {
                 score += item.score
               })
-              score = parseInt(score / personMsg.scores.length)
+              score = parseInt(score / personInfo.scores.length)
             }
-            this.$set(this.scores, personMsg.personId, score)
+            this.$set(this.scores, personInfo.personId, score)
           }
         }
       }

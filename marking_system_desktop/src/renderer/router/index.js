@@ -39,6 +39,11 @@ export default new Router({
       component: require('@/pages/UserPage').default
     },
     {
+      path: '/v0/biglist/:id',
+      name: 'bigList',
+      component: require('@/pages/BigListPage').default
+    },
+    {
       path: '*',
       component: require('@/pages/Page404').default
     }

@@ -8,7 +8,20 @@ module.exports = socket => {
         if (err) {
           socket.emit('get_mark_by_id_error', {message: '获取评分信息发生错误'})
         } else {
-          socket.emit('get_mark_by_id_success', {message: '获取评分信息成功', data: docs})
+          const data = docs.map(item => {
+            return {
+              id: item._id,
+              markName: item.markName,
+              encrypt: item.encrypt,
+              privary: item.privary,
+              auth: item.auth,
+              createDate: item.createDate,
+              owner: item.owner.username,
+              member: item.members,
+              done: item.done
+            }
+          })
+          socket.emit('get_mark_by_id_success', {message: '获取评分信息成功', data})
         }
       })
     } else {

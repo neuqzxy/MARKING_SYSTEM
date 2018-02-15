@@ -97,6 +97,9 @@
                 return item._id === this.id
               })[0]
             }
+            if (!data) {
+              return this.$message.error('发生错误')
+            }
             delete data.createDate
             window.$socket.emit('join_mark_group', {
               markName: this.markName,
@@ -106,7 +109,7 @@
               data
             })
           }).catch(err => {
-            this.$message.error(`发生错误${err.message}`)
+            console.log(err)
           })
         }
       }
