@@ -12,11 +12,12 @@
                         <el-card>
                             <el-row :gutter="10">
                                 <el-col :span="14">
-                                    <h2 style="text-align: left;"><span style="cursor: pointer;" @click="changeSortState(item.id)">总榜单<i :style="{'margin-left': sort === 'bigToSmall' ? '0' : '-12px'}" :class="sort === 'bigToSmall' ? 'el-icon-sort-down' : 'el-icon-sort-up'"></i></span></h2>
+                                    <h2 style="text-align: left;"><span style="cursor: pointer;" @click="changeSortState(item.id)">榜单<i :style="{'margin-left': sort === 'bigToSmall' ? '0' : '-12px'}" :class="sort === 'bigToSmall' ? 'el-icon-sort-down' : 'el-icon-sort-up'"></i></span></h2>
                                 </el-col>
                                 <el-col :span="10" style="text-align: right;">
-                                    <el-button type="text" @click="goBigBD(item.id)">大榜单</el-button>
+                                    <el-button type="text" @click="goBigBD(item.id)">总榜单</el-button>
                                     <el-button type="text" @click="changeFormState">添加信息</el-button>
+                                    <el-button type="text" @click="exportExcel(item.id, item.markName)">导出Excel</el-button>
                                 </el-col>
                             </el-row>
                             <my-table :scores="scores" :markId="item.id" :changeFormState="changeFormState" :tableTitle="tableTitle" :tableData="tableData[item.id]" :roomsId="item.id"></my-table>
@@ -73,6 +74,7 @@
   import {fromJS} from 'immutable'
   import api from '../config/api.config'
   import ElButton from '../../../node_modules/element-ui/packages/button/src/button.vue'
+  import exportExcel from '~src/node/exportExcel'
 
   export default {
     data () {
@@ -142,11 +144,12 @@
       ...mapGetters(['getTableData'])
     },
     watch: {
-      // 排序
+      // 同步vux和该实例中的数据，由于vuex中存储的是immutable的map对象，所以不适合使用
       getTableData (value) {
         this.tableData = value
         this.setScores()
       },
+      // 排序
       scores: {
         handler (value) {
           // 将分数排序，和void 0做比较是为了让没有打分的排在后面
@@ -181,9 +184,51 @@
         'setJoiningMarks',
         'setTableData'
       ]),
+      exportExcel (markId, markName) {
+        this.$message.info('正在生成Excel')
+        const __personInfo = []
+        const data = this.getTableData[markId]
+        data.forEach(item => {
+          if (item.scores && item.scores.length > 0) {
+            let allScore = item.scores.reduce((a, b) => {
+              return a + (b.score || 0)
+            }, 0)
+            item.scores.forEach(score => {
+              __personInfo.push({
+                person_name: item.username,
+                sex: item.sex,
+                age: item.age,
+                describe: item.otherMessage,
+                creator: item.creator,
+                username: score.username,
+                score: score.score,
+                all_score: allScore,
+                mark_name: markName,
+                average_score: parseInt(allScore / item.scores.length)
+              })
+            })
+          } else if (item.scores.length === 0) {
+            __personInfo.push({
+              person_name: item.username,
+              sex: item.sex === 'man' ? '男' : '女',
+              age: item.age,
+              describe: item.otherMessage,
+              creator: item.creator,
+              username: '暂无',
+              score: '暂无',
+              all_score: '暂无',
+              mark_name: markName,
+              average_score: '暂无'
+            })
+          }
+        })
+        exportExcel(markName, __personInfo, this.$message)
+      },
+      // 路由导航
       goBigBD (id) {
         this.$router.push({name: 'bigList', params: {id}})
       },
+      // 初始化socket
       initSocket () {
         window.$socket.on('get_mark_rooms_error', data => {
           this.$message.error(data.message)
@@ -261,6 +306,7 @@
           this.setTableData({tableData: fromJS(tableData)})
         })
       },
+      // 销毁socket事件
       OffSocket () {
         if (window.$socket && window.$socket.off) {
           window.$socket.off('get_mark_rooms_error')
@@ -273,10 +319,12 @@
           window.$socket.off('broadcast_give_score_success')
         }
       },
+      // 排序方式
       changeSortState (id) {
         this.tableData[id].reverse()
         this.sort = (this.sort === 'bigToSmall') ? 'smallToBig' : 'bigToSmall'
       },
+      // 点击编辑或创建用户
       changeFormState (id, markId, type) {
         this.formState = type === 'editing' ? 'editing' : 'creating'
         if (this.formState === 'creating') {
@@ -295,6 +343,7 @@
           }
         }
       },
+      // 创建用户
       submitForm (formName, markName, id) {
         this.$refs[formName][0].validate((valid) => {
           if (valid) {
@@ -306,6 +355,7 @@
           }
         })
       },
+      // 打分
       giveScore (markName, markId, personId) {
         window.$socket.emit('give_score', {
           score: this.tableForm.score || 0,
@@ -316,6 +366,7 @@
           personName: this.tableForm.username
         })
       },
+      // 得到打分信息后设置scores的数据
       setScores () {
         let keys = Object.keys(this.tableData)
         for (let key of keys) {

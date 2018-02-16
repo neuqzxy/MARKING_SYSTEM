@@ -1,6 +1,7 @@
 <template>
     <div class="login">
-        <h1 class="title">智 能 评 分 系 统</h1>
+        <a @click="goGithub" href="https://github.com/neuqzxy/MARKING_SYSTEM.git"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/a6677b08c955af8400f44c6298f40e7d19cc5b2d/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f677261795f3664366436642e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png"></a>
+        <h1 class="title">实 时 评 分 系 统</h1>
         <hr>
         <el-form :model="ruleForm" :rules="rules" ref="loginForm" label-width="100px" class="Form">
             <el-form-item label="用户名" prop="username" class="form-item">
@@ -24,6 +25,7 @@
 
 <script>
   import { mapGetters, mapMutations } from 'vuex'
+  import {MarkingSystem} from '~src/db/index'
   import electron from 'electron'
   import api from '../config/api.config'
 
@@ -61,6 +63,10 @@
         changeOnLineState: 'setOnLineState',
         setUsername: 'setUsername'
       }),
+      goGithub (e) {
+        e.preventDefault()
+        electron.shell.openExternal('https://github.com/neuqzxy/MARKING_SYSTEM.git')
+      },
       submitForm (formName) {
         this.$refs[formName].validate((valid) => {
           if (valid) {
@@ -88,15 +94,19 @@
         })
       },
       initLoginForm () {
-        this.ruleForm.username = localStorage.getItem('username')
-        this.ruleForm.password = localStorage.getItem('password')
+        const {username, password} = MarkingSystem.get('User').value()
+        this.ruleForm.username = username
+        this.ruleForm.password = password
+        /* this.ruleForm.username = localStorage.getItem('username')
+        this.ruleForm.password = localStorage.getItem('password') */
       },
       storeToLocal () {
         if (this.ruleForm.remember) {
-          localStorage.setItem('username', this.ruleForm.username)
-          localStorage.setItem('password', this.ruleForm.password)
+          MarkingSystem.set('User.username', this.ruleForm.username).set('User.password', this.ruleForm.password).write()
+          /* localStorage.setItem('username', this.ruleForm.username)
+          localStorage.setItem('password', this.ruleForm.password) */
         } else {
-          localStorage.clear('username', 'password')
+          MarkingSystem.set('User.username', '').set('User.password', '').write()
         }
       },
       doLogin (username, password) {
