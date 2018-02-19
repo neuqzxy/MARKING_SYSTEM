@@ -6,7 +6,7 @@
             <el-breadcrumb-item>评分</el-breadcrumb-item>
         </el-breadcrumb>
         <el-tabs type="border-card" class="mark-page-content">
-            <el-tab-pane style="height: 100%;" :label="item.markName" :key="item.id" v-for="item in joiningMarks">
+            <el-tab-pane style="height: 100%;" :label="item.markName" :key="item.id" v-for="item in getJoiningMarks">
                 <el-row :gutter="10" style="height: 100%;">
                     <el-col :span="10">
                         <el-card>
@@ -92,8 +92,6 @@
           id: ''
         },
         scores: {},
-        // 记录加入的评分组的信息
-        joiningMarks: {},
         // 当前选中的人的信息
         selectedMessage: {
           markName: '',
@@ -128,20 +126,20 @@
       }
     },
     created () {
+      if (this.getSocketState.get('markPage')) {
+        this.OffSocket()
+      }
       this.initSocket()
       window.$socket.emit('get_mark_rooms', {
         username: this.$store.state.UserMessage.username
       })
-    },
-    destroyed () {
-      this.OffSocket()
     },
     components: {
       ElButton,
       'my-table': () => import('../components/common/myTable')
     },
     computed: {
-      ...mapGetters(['getTableData'])
+      ...mapGetters(['getTableData', 'getSocketState', 'getJoiningMarks'])
     },
     watch: {
       // 同步vux和该实例中的数据，由于vuex中存储的是immutable的map对象，所以不适合使用
@@ -182,7 +180,8 @@
     methods: {
       ...mapMutations([
         'setJoiningMarks',
-        'setTableData'
+        'setTableData',
+        'setSocketState'
       ]),
       exportExcel (markId, markName) {
         this.$message.info('正在生成Excel')
@@ -230,14 +229,19 @@
       },
       // 初始化socket
       initSocket () {
+        this.setSocketState({socketState: this.getSocketState.set('markPage', true)})
         window.$socket.on('get_mark_rooms_error', data => {
           this.$message.error(data.message)
         })
         window.$socket.on('get_mark_rooms_success', data => {
           /* this.setJoiningMarks({joiningMarks: data.data}) */
-          this.joiningMarks = data.data.map(item => {
+          /* this.joiningMarks = data.data.map(item => {
+            return {id: item.id, markName: item.markName}
+          }) */
+          const joiningMarks = data.data.map(item => {
             return {id: item.id, markName: item.markName}
           })
+          this.setJoiningMarks({joiningMarks: fromJS(joiningMarks)})
           let tableData = this.getTableData
           for (let i of data.data) {
             /* this.$set(this.tableData, i.id, JSON.parse(JSON.stringify(i.charts)))

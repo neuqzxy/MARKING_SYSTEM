@@ -2,10 +2,16 @@ import {fromJS} from 'immutable'
 const state = {
   doingMarks: [],
   doneMarks: [],
-  joiningMarks: [],
+  // 加入的评分组
+  joiningMarks: fromJS([]),
+  // 搜索出来的评分组
   searchedMarks: [],
+  // 个人信息中的评分组，包括匿名评分
   myMarks: [],
-  tableData: fromJS({})
+  tableData: fromJS({}),
+  socketState: fromJS({
+    markPage: false
+  })
 }
 
 const mutations = {
@@ -26,6 +32,9 @@ const mutations = {
   },
   setTableData (state, payload) {
     state.tableData = payload.tableData
+  },
+  setSocketState (state, payload) {
+    state.socketState = payload.socketState
   }
 }
 
@@ -37,7 +46,7 @@ const getters = {
     return state.doneMarks
   },
   getJoiningMarks (state) {
-    return state.joiningMarks
+    return state.joiningMarks.toJS()
   },
   getSearchedMarks (state) {
     return state.searchedMarks
@@ -47,6 +56,9 @@ const getters = {
   },
   getTableData (state) {
     return state.tableData.toJS()
+  },
+  getSocketState (state) {
+    return state.socketState
   }
 }
 

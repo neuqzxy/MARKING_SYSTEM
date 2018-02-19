@@ -41,6 +41,7 @@ export default new Router({
     {
       path: '/v0/biglist/:id',
       name: 'bigList',
+      meta: {keepAlive: true},
       component: require('@/pages/BigListPage').default
     },
     {
