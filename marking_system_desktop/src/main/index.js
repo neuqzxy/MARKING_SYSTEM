@@ -1,6 +1,6 @@
 'use strict'
 
-import { app, BrowserWindow, ipcMain, dialog } from 'electron'
+import { app, BrowserWindow, ipcMain, dialog, Menu, MenuItem } from 'electron'
 
 /**
  * Set `__static` path to static files in production
@@ -68,12 +68,82 @@ app.on('activate', () => {
   if (mainWindow === null) {
     createWindow()
   }
-  createWindow()
 })
 
 ipcMain.on('login-success', () => {
   mainWindow.maximize()
   mainWindow.setResizable(false)
+})
+
+// 创建上下文菜单
+const menu = new Menu()
+menu.append(new MenuItem({label: '修改',
+  submenu: [
+    {
+      label: '剪切',
+      accelerator: 'CmdOrCtrl+X',
+      selector: 'cut:',
+      role: 'cut'
+    },
+    {
+      type: 'separator'
+    },
+    {
+      label: '复制',
+      accelerator: 'CmdOrCtrl+C',
+      selector: 'copy:',
+      role: 'copy'
+    },
+    {
+      type: 'separator'
+    },
+    {
+      label: '粘贴',
+      accelerator: 'CmdOrCtrl+V',
+      selector: 'paste:',
+      role: 'paste'
+    },
+    {
+      type: 'separator'
+    },
+    {
+      label: '全选',
+      accelerator: 'CmdOrCtrl+A',
+      selector: 'selectAll:',
+      role: 'selectall'
+    }
+  ]}))
+menu.append(new MenuItem({label: '视图',
+  submenu: [
+    {
+      label: '重新载入',
+      accelerator: 'CmdOrCtrl+R',
+      click: function (item, focusedWindow) {
+        if (focusedWindow) {
+          focusedWindow.reload()
+        }
+      }
+    },
+    {
+      label: 'Toggle Developer Tools',
+      accelerator: (function () {
+        if (process.platform === 'darwin') {
+          return 'Alt+Command+I'
+        }
+        return 'Ctrl+Shift+I'
+      }()),
+      click: function (item, focusedWindow) {
+        if (focusedWindow) {
+          focusedWindow.toggleDevTools()
+        }
+      }
+    }
+  ]}))
+
+app.on('browser-window-created', function (event, win) {
+  win.webContents.on('context-menu', function (e, params) {
+    menu.popup(win, params.x, params.y)
+  })
 })
 
 /**

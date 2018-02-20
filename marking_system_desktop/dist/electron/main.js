@@ -2608,12 +2608,70 @@ __WEBPACK_IMPORTED_MODULE_0_electron__["app"].on('activate', function () {
   if (mainWindow === null) {
     createWindow();
   }
-  createWindow();
 });
 
 __WEBPACK_IMPORTED_MODULE_0_electron__["ipcMain"].on('login-success', function () {
   mainWindow.maximize();
   mainWindow.setResizable(false);
+});
+
+var menu = new __WEBPACK_IMPORTED_MODULE_0_electron__["Menu"]();
+menu.append(new __WEBPACK_IMPORTED_MODULE_0_electron__["MenuItem"]({ label: '修改',
+  submenu: [{
+    label: '剪切',
+    accelerator: 'CmdOrCtrl+X',
+    selector: 'cut:',
+    role: 'cut'
+  }, {
+    type: 'separator'
+  }, {
+    label: '复制',
+    accelerator: 'CmdOrCtrl+C',
+    selector: 'copy:',
+    role: 'copy'
+  }, {
+    type: 'separator'
+  }, {
+    label: '粘贴',
+    accelerator: 'CmdOrCtrl+V',
+    selector: 'paste:',
+    role: 'paste'
+  }, {
+    type: 'separator'
+  }, {
+    label: '全选',
+    accelerator: 'CmdOrCtrl+A',
+    selector: 'selectAll:',
+    role: 'selectall'
+  }] }));
+menu.append(new __WEBPACK_IMPORTED_MODULE_0_electron__["MenuItem"]({ label: '视图',
+  submenu: [{
+    label: '重新载入',
+    accelerator: 'CmdOrCtrl+R',
+    click: function click(item, focusedWindow) {
+      if (focusedWindow) {
+        focusedWindow.reload();
+      }
+    }
+  }, {
+    label: 'Toggle Developer Tools',
+    accelerator: function () {
+      if (process.platform === 'darwin') {
+        return 'Alt+Command+I';
+      }
+      return 'Ctrl+Shift+I';
+    }(),
+    click: function click(item, focusedWindow) {
+      if (focusedWindow) {
+        focusedWindow.toggleDevTools();
+      }
+    }
+  }] }));
+
+__WEBPACK_IMPORTED_MODULE_0_electron__["app"].on('browser-window-created', function (event, win) {
+  win.webContents.on('context-menu', function (e, params) {
+    menu.popup(win, params.x, params.y);
+  });
 });
 /* WEBPACK VAR INJECTION */}.call(__webpack_exports__, "src/main"))
 

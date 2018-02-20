@@ -18,6 +18,10 @@ const doneLog = chalk.bgGreen.white(' DONE ') + ' '
 const errorLog = chalk.bgRed.white(' ERROR ') + ' '
 const okayLog = chalk.bgBlue.white(' OKAY ') + ' '
 const isCI = process.env.CI || false
+/* const fs = require('fs')
+
+const data = fs.readFileSync('./markExcel.xlsx')
+fs.writeFileSync('/Users/zhouxinyu/Library/Application Support/marking_system_desktop/markExcel.xlsx', data) */
 
 if (process.env.BUILD_TARGET === 'clean') clean()
 else if (process.env.BUILD_TARGET === 'web') web()
