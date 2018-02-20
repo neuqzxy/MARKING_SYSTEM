@@ -123,7 +123,7 @@ menu.append(new MenuItem({label: '视图',
           focusedWindow.reload()
         }
       }
-    },
+    }/* ,
     {
       label: 'Toggle Developer Tools',
       accelerator: (function () {
@@ -137,7 +137,7 @@ menu.append(new MenuItem({label: '视图',
           focusedWindow.toggleDevTools()
         }
       }
-    }
+    } */
   ]}))
 
 app.on('browser-window-created', function (event, win) {
