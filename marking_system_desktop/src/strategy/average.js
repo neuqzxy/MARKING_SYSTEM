@@ -1,10 +1,13 @@
-export default data => {
+import getNum from '../renderer/util/getNum'
+export default (data, precision) => {
+  // 得到符合计算精度的函数
+  const toNum = getNum(precision)
   // 先拿到平均分
   const __allScoreData = data.map(item => {
     const __allScore = item.scores.reduce((a, b) => {
       return a + (b.score || 0)
     }, 0)
-    const __averageScore = item.scores.length === 0 ? '暂无' : parseInt(__allScore / item.scores.length)
+    const __averageScore = item.scores.length === 0 ? '暂无' : toNum(__allScore / item.scores.length)
     return {...item, calculatedScores: __averageScore}
   })
   // 开始排名

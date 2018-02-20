@@ -19,6 +19,17 @@
         </el-card>
         <el-card>
             <div slot="header" style="text-align: left">
+                <span>计算精度</span>
+            </div>
+            <el-radio-group v-model="precision">
+                <el-radio :label="0">只保留整数</el-radio>
+                <el-radio :label="1">保留一位小数</el-radio>
+                <el-radio :label="2">保留两位小数</el-radio>
+                <el-radio :label="3">保留三位小数</el-radio>
+            </el-radio-group>
+        </el-card>
+        <el-card>
+            <div slot="header" style="text-align: left">
                 <span>计算策略</span>
             </div>
             <el-radio-group v-model="radio">
@@ -40,7 +51,8 @@
         checked: [],
         isIndeterminate: true,
         checkAll: false,
-        radio: 1
+        radio: 1,
+        precision: 0
       }
     },
     computed: {
@@ -75,9 +87,9 @@
         }
         switch (this.radio) {
           case 1:
-            return dongDaStrategy(this.getCheckedMarksData, this.checked)
+            return dongDaStrategy(this.getCheckedMarksData, this.checked, this.precision)
           case 2:
-            return averageStrategy(this.getCheckedMarksData)
+            return averageStrategy(this.getCheckedMarksData, this.precision)
         }
       }
     },
