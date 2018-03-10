@@ -136,8 +136,8 @@
           window.$socket.on('createMark-success', data => {
             if (data.code === 1000) {
               this.$message.success('创建成功')
-              console.log(data)
-              if (!data.data.encrypt) {
+              console.log(data.data)
+              if (!data.data.privary) {
                 this.setDoingMarks({doingMarks: [data.data, ...this.getDoingMarks]})
               }
               this.$emit('update:creatingWork', false)

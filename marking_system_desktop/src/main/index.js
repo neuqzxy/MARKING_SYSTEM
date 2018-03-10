@@ -68,6 +68,7 @@ app.on('activate', () => {
   if (mainWindow === null) {
     createWindow()
   }
+  // createWindow()
 })
 
 ipcMain.on('login-success', () => {

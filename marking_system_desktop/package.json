@@ -1,6 +1,6 @@
 {
   "name": "marking_system_desktop",
-  "version": "0.0.1",
+  "version": "0.1.1",
   "author": "xinzai <1843605478@qq.com>",
   "description": "基于electron和vue的桌面版开源评分系统，使用websocket连接",
   "license": null,

@@ -13,6 +13,8 @@ const addPerson = require('./socket/addPerson/index')
 const giveScore = require('./socket/giveScore/index')
 const getMyMark = require('./socket/getMyMark/index')
 const searchMark = require('./socket/searchMark/index')
+const choosePerson = require('./socket/choosePerson/index')
+const removePerson = require('./socket/removePerson/index')
 const md5 = require('./common/md5')
 
 module.exports = {
@@ -44,6 +46,8 @@ module.exports = {
     giveScore(socket)
     getMyMark(socket)
     searchMark(socket)
+    choosePerson(socket)
+    removePerson(socket)
   },
   disconnect(socket) {
     console.log(socket.id + ' disconnected');

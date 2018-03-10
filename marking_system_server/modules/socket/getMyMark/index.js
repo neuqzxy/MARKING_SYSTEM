@@ -16,7 +16,8 @@ module.exports = socket => {
               createDate: item.createDate,
               owner: item.owner.username,
               member: item.members,
-              done: item.done
+              done: item.done,
+              accessCode: item.accessCode
             }
           })
           socket.emit('get_my_marks_success', {message: '获取信息成功', data: docs})

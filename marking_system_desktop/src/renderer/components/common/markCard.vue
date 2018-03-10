@@ -32,6 +32,7 @@
                 <span v-if="privary" style="color: #F56C6C">不公开</span>
                 <span v-if="!privary" style="color: #67C23A">公开</span>
             </div>
+            <div v-if="type === 'userPage'" class="text-line" style="text-align: center">验证码: <span style="color: #409EFF"> {{accessCode}}</span></div>
         </el-card>
     </el-col>
 </template>
@@ -65,6 +66,12 @@
       },
       privary: {
         type: Boolean
+      },
+      accessCode: {
+        type: String
+      },
+      type: {
+        type: String
       }
     },
     computed: {
@@ -76,6 +83,24 @@
     },
     methods: {
       joinGroup () {
+        // 该评分的数据可能来源于搜索到的评分，大厅中正在进行的评分，以及我的评分
+        let data = this.getDoingMarks.filter(item => {
+          return item.id === this.id
+        })[0]
+        if (!data) {
+          data = this.getSearchedMarks.filter(item => {
+            return item._id === this.id
+          })[0]
+        }
+        if (!data) {
+          data = this.getMyMarks.filter(item => {
+            return item._id === this.id
+          })[0]
+        }
+        if (!data) {
+          return this.$message.error('发生错误')
+        }
+        delete data.createDate
         if (this.encrypt) {
           this.$prompt('请输入该评分的密码', '提示', {
             confirmButtonText: '确定',
@@ -84,23 +109,6 @@
             inputPattern: /^\w{3,10}$/,
             inputErrorMessage: '密码格式不正确'
           }).then(({ value }) => {
-            let data = this.getDoingMarks.filter(item => {
-              return item.id === this.id
-            })[0]
-            if (!data) {
-              data = this.getSearchedMarks.filter(item => {
-                return item._id === this.id
-              })[0]
-            }
-            if (!data) {
-              data = this.getMyMarks.filter(item => {
-                return item._id === this.id
-              })[0]
-            }
-            if (!data) {
-              return this.$message.error('发生错误')
-            }
-            delete data.createDate
             window.$socket.emit('join_mark_group', {
               markName: this.markName,
               id: this.id,
@@ -110,6 +118,13 @@
             })
           }).catch(err => {
             console.log(err)
+          })
+        } else {
+          window.$socket.emit('join_mark_group', {
+            markName: this.markName,
+            id: this.id,
+            username: this.$store.state.UserMessage.username,
+            data
           })
         }
       }

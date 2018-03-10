@@ -8,6 +8,7 @@
 const User = require('../../../db/User')
 const Mark = require('../../../db/Mark')
 const checkFormFull = require('../../common/checkFormFull')
+const randomNum = require('../../common/randomNum')
 module.exports = (socket) => {
   socket.on('createMark', data => {
     let flag = checkFormFull(data)
@@ -19,7 +20,7 @@ module.exports = (socket) => {
           if (err) {
             socket.emit('createMark-formErr', {code: 5001, message: '表单存储失败'})
           } else {
-            Mark.create({owner: {username: owner, id: data[0]._id}, markName, encrypt, password, auth, privary}, (err, docs) => {
+            Mark.create({owner: {username: owner, id: data[0]._id}, markName, encrypt, password, auth, privary, accessCode: randomNum(6)}, (err, docs) => {
               if (err) {
                 socket.emit('createMark-formErr', {code: 5001, message: '表单存储失败'})
               } else {
@@ -40,7 +41,8 @@ module.exports = (socket) => {
                       auth: auth,
                       createDate: docs.createDate,
                       owner: owner,
-                      done: false
+                      done: false,
+                      privary
                     }
                     socket.emit('createMark-success', {code: 1000, message: '创建成功', data})
                     if (!privary) {

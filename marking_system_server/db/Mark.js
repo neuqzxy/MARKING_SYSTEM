@@ -25,6 +25,10 @@ const MarkSchema = mongoose.Schema({
       id: String
     }
   ],
+  accessCode: {
+    type: String,
+    default: 'XINZAI'
+  },
   charts: [
     {
       username: String,

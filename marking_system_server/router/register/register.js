@@ -22,7 +22,6 @@ module.exports = (req, res) => {
     } else {
       UserModel.find({username: fields.username}, (err, docs) => {
         if (docs.length === 0) {
-          console.log('a')
           if (fields.email !== req.session.email || fields.authCode !== req.session.authCode) {
             req.session.email = void 0;
             req.session.authCode = void 0;

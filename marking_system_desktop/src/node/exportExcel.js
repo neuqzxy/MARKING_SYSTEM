@@ -16,6 +16,7 @@ if (!fs.existsSync(path.join(remote.app.getPath('userData'), './myExcel'))) {
 }
 
 export default (markName, personInfo, message) => {
+  console.log(personInfo)
   const data = [[{'mark_name': markName}], personInfo]
   ejsExcel.renderExcel(ExcelBuf, data).then(function (exlBuf2) {
     fs.writeFileSync(path.join(remote.app.getPath('userData'), './myExcel/MyExcel.xlsx'), exlBuf2)

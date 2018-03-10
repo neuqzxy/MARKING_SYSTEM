@@ -4,7 +4,7 @@
             <el-col class="my-table-col-title" v-for="(item, index) in tableTitle" :span="item.width" :key="`${item.value}-${index}`">{{item.value}}</el-col>
         </el-row>
         <transition-group name="flip-list" tag="ul">
-            <el-row class="my-table-col" v-for="item in tableData" :key="item._id" @click.native="changeFormState(item._id, markId, 'editing')">
+            <el-row class="my-table-col" v-for="item in tableData" :key="item._id" @click.native="changeFormState(item.personId, markId, 'editing')">
                 <el-col style="text-align: center" :key="item.username" :span="6" >{{item.username}}</el-col>
                 <el-col style="text-align: center" :key="item.age" :span="6" >{{item.age}}</el-col>
                 <el-col style="text-align: center" :key="item.sex" :span="6" >{{item.sex === 'man' ? '男' : '女'}}</el-col>

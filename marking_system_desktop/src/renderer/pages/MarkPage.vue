@@ -25,7 +25,15 @@
                     </el-col>
                     <el-col :span="14">
                         <el-card>
-                            <h2>{{formState === 'creating' ? '添加信息' : '个人信息'}}</h2>
+                            <h2>
+                                <el-col :span="16" style="text-align: left">
+                                    {{formState === 'creating' ? '添加信息' : tableForm.username}}
+                                </el-col>
+                                <el-col :span="8" style="text-align: right">
+                                    <el-button type="text" @click="importExcel(item.markName, item.id)">导入Excel</el-button>
+                                    <input :key="key" type="file" ref="input" @change="chooseExcel" v-show="false">
+                                </el-col>
+                            </h2>
                             <hr>
                             <el-form :model="tableForm" :rules="rules" ref="tableForm" label-width="100px">
                                 <el-form-item label="姓名" prop="username">
@@ -47,7 +55,7 @@
                                     <el-input-number v-model="tableForm.score" :min="0" :max="100"></el-input-number>
                                 </el-form-item>
                                 <div v-if="formState === 'editing'">
-                                    <el-row :gutter="10" :key="item.username" v-for="item in tableData[selectedMessage.markId].filter(i => i.personId === selectedMessage.personId)[0].scores">
+                                    <el-row :gutter="10" :key="item.username" v-for="item in (tableData[selectedMessage.markId].filter(i => i.personId === selectedMessage.personId)[0] || {})['scores']">
                                         <el-col :span="12">
                                             评分人  <el-tag>{{item.username}}</el-tag>
                                         </el-col>
@@ -56,9 +64,13 @@
                                         </el-col>
                                     </el-row>
                                 </div>
-                                <el-form-item style="text-align: left;">
-                                    <el-button v-if="formState === 'creating'" type="primary" @click="submitForm('tableForm', item.markName, item.id)">提交</el-button>
+                                <el-form-item style="text-align: left; margin-top: 20px;">
+                                    <el-button v-if="formState === 'creating'" type="primary" ref="submit" @click="submitForm('tableForm', item.markName, item.id)">提交</el-button>
                                     <el-button v-if="formState === 'editing'" type="primary" @click="giveScore(item.markName, item.id)">评分</el-button>
+                                    <el-button-group v-if="formState === 'editing'" size="mini" style="float: right">
+                                        <el-button type="warning" @click="broadcastChooseSb(item.markName, item.id)">广播给所有人</el-button>
+                                        <el-button type="danger" @click="removePerson(item.markName, item.id)">删除选手</el-button>
+                                    </el-button-group>
                                 </el-form-item>
                             </el-form>
                         </el-card>
@@ -73,12 +85,13 @@
   import { mapMutations, mapGetters } from 'vuex'
   import {fromJS} from 'immutable'
   import api from '../config/api.config'
-  import ElButton from '../../../node_modules/element-ui/packages/button/src/button.vue'
   import exportExcel from '~src/node/exportExcel'
+  import importExcel from '~src/node/importExcel'
 
   export default {
     data () {
       return {
+        key: 0,
         api,
         sort: 'bigToSmall',
         formState: 'creating',
@@ -117,6 +130,10 @@
             width: 6
           }
         ],
+        importExcelData: {
+          markName: '',
+          markId: ''
+        },
         rules: {
           username: [
             { required: true, message: '请输入姓名', trigger: 'blur' },
@@ -135,7 +152,6 @@
       })
     },
     components: {
-      ElButton,
       'my-table': () => import('../components/common/myTable')
     },
     computed: {
@@ -195,6 +211,7 @@
             item.scores.forEach(score => {
               __personInfo.push({
                 person_name: item.username,
+                person_id: item.personId,
                 sex: item.sex,
                 age: item.age,
                 describe: item.otherMessage,
@@ -223,9 +240,55 @@
         })
         exportExcel(markName, __personInfo, this.$message)
       },
+      // 上传Excel
+      importExcel (markName, markId) {
+        this.importExcelData.markName = markName
+        this.importExcelData.markId = markId
+        this.$refs.input[0].click()
+      },
+      async chooseExcel (e) {
+        let file = e.target.files[0]
+        if (/.xlsx$/.test(file.name)) {
+          let exlJson = await importExcel(file, this)
+          this.key++
+          this.$message.success(`为您上传${exlJson.length}条信息`)
+          exlJson.forEach((item) => {
+            this.tableForm.username = item.name
+            this.tableForm.sex = item.sex
+            this.tableForm.otherMessage = item.message
+            this.tableForm.age = item.age
+            const {markName, markId} = this.importExcelData
+            const {username, sex, age, otherMessage} = this.tableForm
+            window.$socket.emit('add_person', {username, sex, age: parseInt(age), otherMessage, markName, id: markId, clientUsername: this.$store.state.UserMessage.username})
+            /* this.$refs.submit[0].$emit('click', 'tableForm', markName, markId) */
+          })
+        } else {
+          this.$message.error('请选择Excel文件')
+        }
+      },
       // 路由导航
       goBigBD (id) {
         this.$router.push({name: 'bigList', params: {id}})
+      },
+      broadcastChooseSb (markName, markId) {
+        const data = {
+          markName,
+          markId: markId,
+          personId: this.tableForm.personId,
+          username: this.$store.state.UserMessage.username,
+          personName: this.tableForm.username
+        }
+        window.$socket.emit('choose_person', data)
+      },
+      removePerson (markName, markId) {
+        this.$confirm('点击确定将永久删除该选手, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          window.$socket.emit('remove_person', {markName, markId, personId: this.tableForm.personId, username: this.$store.state.UserMessage.username, personName: this.tableForm.username})
+        }).catch(() => {
+        })
       },
       // 初始化socket
       initSocket () {
@@ -257,6 +320,7 @@
         window.$socket.on('broadcast_add_person_success', data => {
           // this.tableData[data.reqData.id].push({...data.resData, scores: []})
           let tableData = this.getTableData
+          tableData[data.reqData.id] = tableData[data.reqData.id] || []
           tableData[data.reqData.id].push({...data.resData, scores: []})
           this.setTableData({tableData: fromJS(tableData)})
           this.$message.success(data.message)
@@ -265,6 +329,7 @@
           /* this.tableData[data.reqData.id].push({...data.resData, scores: []})
           this.setTableData({tableData: fromJS(this.tableData)}) */
           let tableData = this.getTableData
+          tableData[data.reqData.id] = tableData[data.reqData.id] || []
           tableData[data.reqData.id].push({...data.resData, scores: []})
           this.setTableData({tableData: fromJS(tableData)})
           this.$message.success(data.message)
@@ -309,6 +374,38 @@
           }
           this.setTableData({tableData: fromJS(tableData)})
         })
+        // 广播选择用户的信息
+        window.$socket.on('broadcast_choose_person_success', (data) => {
+          this.$message.success(`评分组${data.markName}的评委${data.username}提醒大家对${data.personName}进行评分`)
+          this.changeFormState(data.personId, data.markId, 'editing')
+        })
+        window.$socket.on('choose_person_success', data => {
+          this.$message.success(`您已成功通知${data.markName}评分组的评委们对${data.personName}进行评分`)
+        })
+        window.$socket.on('choose_person_error', data => {
+          this.$message.error(data.message)
+        })
+        // 删除用户
+        window.$socket.on('broadcast_remove_person_success', data => {
+          let tableData = this.getTableData
+          /* tableData[data.markId] = tableData[data.markId].filter(item => {
+            return item.personId !== data.personId
+          }) */
+          this.setTableData({tableData: fromJS(tableData)})
+          this.$message.success(`评委${data.username}删除了选手${data.personName}`)
+        })
+        window.$socket.on('remove_person_success', data => {
+          let tableData = this.getTableData
+          tableData[data.markId] = tableData[data.markId].filter(item => {
+            return item.personId !== data.personId
+          })
+          this.scores = {}
+          this.setTableData({tableData: fromJS(tableData)})
+          this.$message.success(`您成功删除了${data.personName}的信息`)
+        })
+        window.$socket.on('remove_person_error', data => {
+          this.$message.error(data.message)
+        })
       },
       // 销毁socket事件
       OffSocket () {
@@ -321,6 +418,12 @@
           window.$socket.off('give_score_error')
           window.$socket.off('give_score_success')
           window.$socket.off('broadcast_give_score_success')
+          window.$socket.off('choose_person_success')
+          window.$socket.off('broadcast_choose_person_success')
+          window.$socket.off('choose_person_error')
+          window.$socket.off('remove_person_success')
+          window.$socket.off('broadcast_remove_person_success')
+          window.$socket.off('remove_person_error')
         }
       },
       // 排序方式
@@ -335,7 +438,7 @@
           this.tableForm = {username: '', age: 0, sex: 'man', otherMessage: '', score: 0}
         } else {
           const data = this.tableData[markId].filter(item => {
-            return item._id === id
+            return item.personId === id
           })[0]
           this.selectedMessage = {markId, personId: data.personId}
           this.tableForm = {
@@ -349,6 +452,7 @@
       },
       // 创建用户
       submitForm (formName, markName, id) {
+        console.log('submit', markName)
         this.$refs[formName][0].validate((valid) => {
           if (valid) {
             const {username, sex, age, otherMessage} = this.tableForm
@@ -360,7 +464,7 @@
         })
       },
       // 打分
-      giveScore (markName, markId, personId) {
+      giveScore (markName, markId) {
         window.$socket.emit('give_score', {
           score: this.tableForm.score || 0,
           markName,
@@ -372,19 +476,23 @@
       },
       // 得到打分信息后设置scores的数据
       setScores () {
-        let keys = Object.keys(this.tableData)
-        for (let key of keys) {
-          for (let personInfo of this.tableData[key]) {
-            let score = void 0
-            if (personInfo.scores.length > 0) {
-              score = 0
-              personInfo.scores.forEach(item => {
-                score += item.score
-              })
-              score = parseInt(score / personInfo.scores.length)
+        try {
+          let keys = Object.keys(this.tableData)
+          for (let key of keys) {
+            for (let personInfo of this.tableData[key]) {
+              let score = void 0
+              if (personInfo.scores && personInfo.scores.length > 0) {
+                score = 0
+                personInfo.scores.forEach(item => {
+                  score += item.score
+                })
+                score = parseInt(score / personInfo.scores.length)
+              }
+              this.$set(this.scores, personInfo.personId, score)
             }
-            this.$set(this.scores, personInfo.personId, score)
           }
+        } catch (err) {
+          console.log(err.message)
         }
       }
     }

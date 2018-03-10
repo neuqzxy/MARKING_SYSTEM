@@ -5,10 +5,10 @@
             <el-breadcrumb-item :to="{ name: 'hall' }">大厅</el-breadcrumb-item>
             <el-breadcrumb-item>用户信息</el-breadcrumb-item>
         </el-breadcrumb>
-        <el-card>
+        <el-card class="userpage-card">
             <div slot="header" class="">
                 <span>我的评分</span>
-                <el-button style="float: right; padding: 3px 0" type="text">操作按钮</el-button>
+                <!--<el-button style="float: right; padding: 3px 0" type="text">操作按钮</el-button>-->
             </div>
             <el-row :gutter="10">
                 <mark-card v-for="item in myMarks"
@@ -20,6 +20,8 @@
                            :privary="item.privary"
                            :createDate="item.createDate"
                            :id="item._id"
+                           :accessCode="item.accessCode"
+                           type="userPage"
                 ></mark-card>
             </el-row>
         </el-card>
@@ -49,6 +51,7 @@ export default {
       })
       socket.on('get_my_marks_success', data => {
         this.myMarks = data.data
+        console.log(this.myMarks)
         this.setMyMarks({myMarks: data.data})
       })
     }
@@ -68,6 +71,9 @@ export default {
         &-breadcrumb {
             font-size: 1.2em;
             margin-bottom: 30px;
+        }
+        &-card {
+            overflow: auto;
         }
     }
 </style>
