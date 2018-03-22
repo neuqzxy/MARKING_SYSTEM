@@ -24,7 +24,7 @@ module.exports = socket => {
                 })
               } else {
                 socket.emit('remove_person_success', data)
-                socket.to(data.markId).emit('broad_remove_person_success', data)
+                socket.to(data.markId).emit('broadcast_remove_person_success', data)
               }
             })
           }

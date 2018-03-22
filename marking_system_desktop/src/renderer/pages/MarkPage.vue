@@ -170,6 +170,10 @@
           let scores = Object.keys(value).sort((x, y) => (this.scores[y] === void 0 ? -1 : this.scores[y]) - (this.scores[x] === void 0 ? -1 : this.scores[x]))
           const keys = Object.keys(this.tableData)
           const newTableData = {}
+          // 将房间id赋值给newTableData
+          keys.forEach(item => {
+            newTableData[item] = []
+          })
           for (let personId of scores) {
             for (let i of keys) {
               let isBreak = false
@@ -226,6 +230,7 @@
           } else if (item.scores.length === 0) {
             __personInfo.push({
               person_name: item.username,
+              person_id: item.personId,
               sex: item.sex === 'man' ? '男' : '女',
               age: item.age,
               describe: item.otherMessage,
@@ -306,12 +311,14 @@
           })
           this.setJoiningMarks({joiningMarks: fromJS(joiningMarks)})
           let tableData = this.getTableData
+          // console.log(this.getTableData)
           for (let i of data.data) {
             /* this.$set(this.tableData, i.id, JSON.parse(JSON.stringify(i.charts)))
             this.setTableData({tableData: fromJS(this.tableData)}) */
             tableData[i.id] = i.charts
             this.setTableData({tableData: fromJS(tableData)})
           }
+          console.log(this.getTableData)
           // this.setScores()
         })
         window.$socket.on('add_person_error', data => {
@@ -386,13 +393,14 @@
           this.$message.error(data.message)
         })
         // 删除用户
-        window.$socket.on('broadcast_remove_person_success', data => {
+        window.$socket.on('broad_remove_person_success', data => {
           let tableData = this.getTableData
-          /* tableData[data.markId] = tableData[data.markId].filter(item => {
+          tableData[data.markId] = tableData[data.markId].filter(item => {
             return item.personId !== data.personId
-          }) */
+          })
+          this.scores = {}
           this.setTableData({tableData: fromJS(tableData)})
-          this.$message.success(`评委${data.username}删除了选手${data.personName}`)
+          this.$message.warning(`评委${data.username}删除了选手${data.personName}`)
         })
         window.$socket.on('remove_person_success', data => {
           let tableData = this.getTableData

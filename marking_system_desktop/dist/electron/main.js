@@ -2608,7 +2608,6 @@ __WEBPACK_IMPORTED_MODULE_0_electron__["app"].on('activate', function () {
   if (mainWindow === null) {
     createWindow();
   }
-  createWindow();
 });
 
 __WEBPACK_IMPORTED_MODULE_0_electron__["ipcMain"].on('login-success', function () {
