@@ -2,21 +2,21 @@
 <rss version="2.0">
     <channel>
         <title>实时评分系统 Blog</title>
-        <link>https://facebook.github.io/blog</link>
+        <link>https://facebook.github.io/MARKING_SYSTEM/blog</link>
         <description>The best place to stay up-to-date with the latest 实时评分系统 news and events.</description>
         <lastBuildDate>Thu, 22 Mar 2018 06:00:00 GMT</lastBuildDate>
         <docs>http://blogs.law.harvard.edu/tech/rss</docs>
         <generator>Feed for Node.js</generator>
         <image>
             <title>实时评分系统 Blog</title>
-            <url>https://facebook.github.io/img/logo_light.png</url>
-            <link>https://facebook.github.io/blog</link>
+            <url>https://facebook.github.io/MARKING_SYSTEM/img/logo_light.png</url>
+            <link>https://facebook.github.io/MARKING_SYSTEM/blog</link>
         </image>
         <copyright>Copyright © 2018 欣仔 </copyright>
         <item>
             <title><![CDATA[New Version 0.1.2]]></title>
-            <link>https://facebook.github.io/blog/2018/03/22/new-version-0.1.2.html</link>
-            <guid>https://facebook.github.io/blog/2018/03/22/new-version-0.1.2.html</guid>
+            <link>https://facebook.github.io/MARKING_SYSTEM/blog/2018/03/22/new-version-0.1.2.html</link>
+            <guid>https://facebook.github.io/MARKING_SYSTEM/blog/2018/03/22/new-version-0.1.2.html</guid>
             <pubDate>Thu, 22 Mar 2018 06:00:00 GMT</pubDate>
             <description><![CDATA[<p>fixed a bug that caused the rooms lost after sorting, fixed a bug that caused export Excel abnormal</p>
 ]]></description>
