@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
-    <id>https://facebook.github.io/blog</id>
+    <id>https://facebook.github.io/MARKING_SYSTEM/blog</id>
     <title>实时评分系统 Blog</title>
     <updated>2018-03-22T06:00:00Z</updated>
     <generator>Feed for Node.js</generator>
-    <link rel="alternate" href="https://facebook.github.io/blog"/>
+    <link rel="alternate" href="https://facebook.github.io/MARKING_SYSTEM/blog"/>
     <subtitle>The best place to stay up-to-date with the latest 实时评分系统 news and events.</subtitle>
-    <logo>https://facebook.github.io/img/logo_light.png</logo>
+    <logo>https://facebook.github.io/MARKING_SYSTEM/img/logo_light.png</logo>
     <rights>Copyright © 2018 欣仔 </rights>
     <entry>
         <title type="html"><![CDATA[New Version 0.1.2]]></title>
-        <id>https://facebook.github.io/blog/2018/03/22/new-version-0.1.2.html</id>
-        <link href="https://facebook.github.io/blog/2018/03/22/new-version-0.1.2.html">
+        <id>https://facebook.github.io/MARKING_SYSTEM/blog/2018/03/22/new-version-0.1.2.html</id>
+        <link href="https://facebook.github.io/MARKING_SYSTEM/blog/2018/03/22/new-version-0.1.2.html">
         </link>
         <updated>2018-03-22T06:00:00Z</updated>
         <summary type="html"><![CDATA[<p>fixed a bug that caused the rooms lost after sorting, fixed a bug that caused export Excel abnormal</p>
