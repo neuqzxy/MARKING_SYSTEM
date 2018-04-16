@@ -12,7 +12,12 @@
                         <el-card>
                             <el-row :gutter="10">
                                 <el-col :span="14">
-                                    <h2 style="text-align: left;"><span style="cursor: pointer;" @click="changeSortState(item.id)">榜单<i :style="{'margin-left': sort === 'bigToSmall' ? '0' : '-12px'}" :class="sort === 'bigToSmall' ? 'el-icon-sort-down' : 'el-icon-sort-up'"></i></span></h2>
+                                    <h2 style="text-align: left;">
+                                        <span style="cursor: pointer;" @click="changeSortState(item.id)">
+                                            榜单
+                                            <i :style="{'margin-left': sort === 'bigToSmall' ? '0' : (sort === 'notSort' ? '-6px' : '-14px')}" :class="sort === 'bigToSmall' ? 'el-icon-sort-down' : (sort === 'smallToBig' ? 'el-icon-sort-up' : 'el-icon-sort')"></i>
+                                        </span>
+                                    </h2>
                                 </el-col>
                                 <el-col :span="10" style="text-align: right;">
                                     <el-button type="text" @click="goBigBD(item.id)">总榜单</el-button>
@@ -20,7 +25,7 @@
                                     <el-button type="text" @click="exportExcel(item.id, item.markName)">导出Excel</el-button>
                                 </el-col>
                             </el-row>
-                            <my-table :scores="scores" :markId="item.id" :changeFormState="changeFormState" :tableTitle="tableTitle" :tableData="tableData[item.id]" :roomsId="item.id"></my-table>
+                            <my-table :scores="scores" :markId="item.id" :changeFormState="changeFormState" :tableTitle="tableTitle" :tableData="sort === 'notSort' ?  tableData[item.id] : sortTableData[item.id]" :roomsId="item.id"></my-table>
                         </el-card>
                     </el-col>
                     <el-col :span="14">
@@ -83,17 +88,20 @@
 
 <script>
   import { mapMutations, mapGetters } from 'vuex'
-  import {fromJS} from 'immutable'
+  import {fromJS, List} from 'immutable'
   import api from '../config/api.config'
   import exportExcel from '~src/node/exportExcel'
   import importExcel from '~src/node/importExcel'
+  const BIGTOSMALL = 'bigToSmall'
+  const SMALLTOBIG = 'smallToBig'
+  const NOTSORT = 'notSort'
 
   export default {
     data () {
       return {
         key: 0,
         api,
-        sort: 'bigToSmall',
+        sort: NOTSORT,
         formState: 'creating',
         // 右侧表格中的数据，用户填写的表单数据
         tableForm: {
@@ -112,6 +120,8 @@
           personId: ''
         },
         tableData: {},
+        sortTableData: fromJS({}),
+        sortList: [],
         tableTitle: [
           {
             value: '姓名',
@@ -160,21 +170,21 @@
     watch: {
       // 同步vux和该实例中的数据，由于vuex中存储的是immutable的map对象，所以不适合使用
       getTableData (value) {
-        this.tableData = value
+        this.tableData = value.toJS()
+        this.sortTableData = value.toJS()
         this.setScores()
+        console.log('同步', this.tableData)
       },
       // 排序
-      scores: {
+      sortList: {
         handler (value) {
-          // 将分数排序，和void 0做比较是为了让没有打分的排在后面
-          let scores = Object.keys(value).sort((x, y) => (this.scores[y] === void 0 ? -1 : this.scores[y]) - (this.scores[x] === void 0 ? -1 : this.scores[x]))
-          const keys = Object.keys(this.tableData)
+          const keys = Object.keys(this.sortTableData)
           const newTableData = {}
           // 将房间id赋值给newTableData
           keys.forEach(item => {
             newTableData[item] = []
           })
-          for (let personId of scores) {
+          for (let personId of value) {
             for (let i of keys) {
               let isBreak = false
               newTableData[i] = newTableData[i] ? newTableData[i] : []
@@ -192,9 +202,22 @@
               }
             }
           }
-          this.setTableData({tableData: fromJS(newTableData)})
+          this.sortTableData = newTableData
         },
         deep: true
+      },
+      // sort改变之后就更新值
+      sort (val) {
+        switch (val) {
+          case NOTSORT:
+            break
+          case BIGTOSMALL:
+            this.setScores()
+            break
+          case SMALLTOBIG:
+            this.setScores()
+            break
+        }
       }
     },
     methods: {
@@ -295,6 +318,58 @@
         }).catch(() => {
         })
       },
+      setMarkRoomsSuccess (data) {
+        const joiningMarks = data.map(item => {
+          return {id: item.id, markName: item.markName}
+        })
+        this.setJoiningMarks({joiningMarks: fromJS(joiningMarks)})
+        let tableData = {}
+        for (let i of data) {
+          tableData[i.id] = i.charts
+        }
+        this.setTableData({tableData: fromJS(tableData)})
+      },
+      addPersonSuccess (data) {
+        let tableData = this.getTableData
+        tableData = List.isList(tableData.get(data.reqData.id)) ? tableData : tableData.set(data.reqData.id, List([]))
+        tableData = tableData.set(data.reqData.id, tableData.get(data.reqData.id).push({...data.resData, scores: []}))
+        this.setTableData({tableData})
+        this.changeFormState()
+      },
+      giveScoreSuccess (data) {
+        // 如果打过了分，就修改，否则，就添加
+        let flag = false
+        let personIndex = 0
+        let tableData = this.getTableData
+        let __tableData = tableData.get(data.reqData.markId)
+        // 拿到这个人的得分数组，以及这个评委在数组中的位置
+        let scores = __tableData.filter((item, index) => {
+          if (item.get('personId') === data.reqData.personId) {
+            personIndex = index
+          }
+          return item.get('personId') === data.reqData.personId
+        }).get(0).get('scores')
+        scores.forEach((score, index) => {
+          if (score.get('username') === data.reqData.username) {
+            tableData = tableData.setIn([data.reqData.markId, personIndex, 'scores', index, 'score'], data.reqData.score)
+            flag = true
+          }
+        })
+        if (!flag) {
+          tableData = tableData.setIn([data.reqData.markId, personIndex, 'scores'], scores.mergeIn([0], fromJS({username: data.reqData.username, score: data.reqData.score})))
+        }
+        this.setTableData({tableData})
+      },
+      removePersonSuccess (data) {
+        let tableData = this.getTableData
+        tableData = tableData.set(data.markId, tableData.get(data.markId).filter(item => {
+          console.log(item.get('personId'), data.personId, item.get('personId') !== data.personId)
+          return item.get('personId') !== data.personId
+        }))
+        this.scores = {}
+        this.setTableData({tableData})
+        this.changeFormState()
+      },
       // 初始化socket
       initSocket () {
         this.setSocketState({socketState: this.getSocketState.set('markPage', true)})
@@ -302,84 +377,44 @@
           this.$message.error(data.message)
         })
         window.$socket.on('get_mark_rooms_success', data => {
-          /* this.setJoiningMarks({joiningMarks: data.data}) */
-          /* this.joiningMarks = data.data.map(item => {
-            return {id: item.id, markName: item.markName}
-          }) */
-          const joiningMarks = data.data.map(item => {
-            return {id: item.id, markName: item.markName}
-          })
-          this.setJoiningMarks({joiningMarks: fromJS(joiningMarks)})
-          let tableData = this.getTableData
-          // console.log(this.getTableData)
-          for (let i of data.data) {
-            /* this.$set(this.tableData, i.id, JSON.parse(JSON.stringify(i.charts)))
-            this.setTableData({tableData: fromJS(this.tableData)}) */
-            tableData[i.id] = i.charts
-            this.setTableData({tableData: fromJS(tableData)})
-          }
-          console.log(this.getTableData)
-          // this.setScores()
+          this.setMarkRoomsSuccess(data.data)
         })
         window.$socket.on('add_person_error', data => {
           this.$message.error(data.message)
         })
         window.$socket.on('broadcast_add_person_success', data => {
-          // this.tableData[data.reqData.id].push({...data.resData, scores: []})
-          let tableData = this.getTableData
-          tableData[data.reqData.id] = tableData[data.reqData.id] || []
-          tableData[data.reqData.id].push({...data.resData, scores: []})
-          this.setTableData({tableData: fromJS(tableData)})
-          this.$message.success(data.message)
+          try {
+            this.addPersonSuccess(data)
+            this.$message.success(data.message)
+          } catch (err) {
+            this.$message.error(err.message)
+          }
         })
         window.$socket.on('add_person_success', data => {
-          /* this.tableData[data.reqData.id].push({...data.resData, scores: []})
-          this.setTableData({tableData: fromJS(this.tableData)}) */
-          let tableData = this.getTableData
-          tableData[data.reqData.id] = tableData[data.reqData.id] || []
-          tableData[data.reqData.id].push({...data.resData, scores: []})
-          this.setTableData({tableData: fromJS(tableData)})
-          this.$message.success(data.message)
+          try {
+            this.addPersonSuccess(data)
+            this.$message.success(data.message)
+          } catch (err) {
+            this.$message.error(err.message)
+          }
         })
         window.$socket.on('give_score_error', data => {
           this.$message.error(data.message)
         })
         window.$socket.on('give_score_success', data => {
-          this.$message.success(data.message)
-          // 如果打过了分，就修改，否则，就添加
-          let flag = false
-          // 用于修改scores，（利用原生js Array地址不变的特性，很危险）
-          let tableData = this.getTableData
-          let __tableData = tableData[data.reqData.markId]
-          let scores = __tableData.filter(item => item.personId === data.reqData.personId)[0].scores
-          for (let score of scores) {
-            if (score.username === data.reqData.username) {
-              score.score = data.reqData.score
-              flag = true
-            }
+          try {
+            this.giveScoreSuccess(data)
+            this.$message.success(data.message)
+          } catch (err) {
+            this.$message.error(err.message)
           }
-          if (!flag) {
-            scores.push({username: data.reqData.username, score: data.reqData.score})
-          }
-          this.setTableData({tableData: fromJS(tableData)})
         })
         window.$socket.on('broadcast_give_score_success', data => {
-          // 如果打过了分，就修改，否则，就添加
-          let flag = false
-          // 用于修改scores，（利用原生js Array地址不变的特性，很危险）
-          let tableData = this.getTableData
-          let __tableData = tableData[data.reqData.markId]
-          let scores = __tableData.filter(item => item.personId === data.reqData.personId)[0].scores
-          for (let score of scores) {
-            if (score.username === data.reqData.username) {
-              score.score = data.reqData.score
-              flag = true
-            }
+          try {
+            this.giveScoreSuccess(data)
+          } catch (err) {
+            console.log(err)
           }
-          if (!flag) {
-            scores.push({username: data.reqData.username, score: data.reqData.score})
-          }
-          this.setTableData({tableData: fromJS(tableData)})
         })
         // 广播选择用户的信息
         window.$socket.on('broadcast_choose_person_success', (data) => {
@@ -394,22 +429,20 @@
         })
         // 删除用户
         window.$socket.on('broad_remove_person_success', data => {
-          let tableData = this.getTableData
-          tableData[data.markId] = tableData[data.markId].filter(item => {
-            return item.personId !== data.personId
-          })
-          this.scores = {}
-          this.setTableData({tableData: fromJS(tableData)})
-          this.$message.warning(`评委${data.username}删除了选手${data.personName}`)
+          try {
+            this.removePersonSuccess(data)
+            this.$message.warning(`评委${data.username}删除了选手${data.personName}`)
+          } catch (err) {
+            this.$message.error(err.message)
+          }
         })
         window.$socket.on('remove_person_success', data => {
-          let tableData = this.getTableData
-          tableData[data.markId] = tableData[data.markId].filter(item => {
-            return item.personId !== data.personId
-          })
-          this.scores = {}
-          this.setTableData({tableData: fromJS(tableData)})
-          this.$message.success(`您成功删除了${data.personName}的信息`)
+          try {
+            this.removePersonSuccess(data)
+            this.$message.success(`您成功删除了${data.personName}的信息`)
+          } catch (err) {
+            this.$message.error(err.message)
+          }
         })
         window.$socket.on('remove_person_error', data => {
           this.$message.error(data.message)
@@ -436,8 +469,10 @@
       },
       // 排序方式
       changeSortState (id) {
-        this.tableData[id].reverse()
-        this.sort = (this.sort === 'bigToSmall') ? 'smallToBig' : 'bigToSmall'
+        this.sort = (this.sort === BIGTOSMALL) ? NOTSORT : (this.sort === SMALLTOBIG ? BIGTOSMALL : SMALLTOBIG)
+        if (this.sort === NOTSORT) {
+          this.setTableData({tableData: fromJS(this.sortTableData)})
+        }
       },
       // 点击编辑或创建用户
       changeFormState (id, markId, type) {
@@ -485,7 +520,7 @@
       // 得到打分信息后设置scores的数据
       setScores () {
         try {
-          let keys = Object.keys(this.tableData)
+          let keys = Object.keys(this.sortTableData)
           for (let key of keys) {
             for (let personInfo of this.tableData[key]) {
               let score = void 0
@@ -498,6 +533,15 @@
               }
               this.$set(this.scores, personInfo.personId, score)
             }
+          }
+          if (this.sort !== NOTSORT) {
+            this.sortList = Object.keys(this.scores).sort((x, y) => {
+              if (this.sort === BIGTOSMALL) {
+                return (this.scores[y] === void 0 ? -1 : this.scores[y]) - (this.scores[x] === void 0 ? -1 : this.scores[x])
+              } else {
+                return (this.scores[x] === void 0 ? 1000 : this.scores[x]) - (this.scores[y] === void 0 ? 1000 : this.scores[y])
+              }
+            })
           }
         } catch (err) {
           console.log(err.message)

@@ -14,7 +14,7 @@
             <el-checkbox :indeterminate="isIndeterminate" v-model="checkAll" @change="handleCheckAllChange">全选</el-checkbox>
             <div style="margin: 10px 0;"></div>
             <el-checkbox-group v-model="checked" @change="handleCheckedMarksChange">
-                <el-checkbox v-for="item in getJoiningMarks" :label="item.id" :key="item.id">{{item.markName}}</el-checkbox>
+                <el-checkbox :checked="checked.includes(item.id)" v-for="item in getJoiningMarks" :label="item.id" :key="item.id">{{item.markName}}</el-checkbox>
             </el-checkbox-group>
         </el-card>
         <el-card>
@@ -74,7 +74,7 @@
             return mark.id === item
           })[0]
           // 将房间名存起来
-          let tableData = this.getTableData[item].map(data => {
+          let tableData = this.getTableData.toJS()[item].map(data => {
             return {...data, markName, markId: id}
           })
           __arr = __arr.concat(tableData)

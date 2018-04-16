@@ -55,7 +55,7 @@ const getters = {
     return state.myMarks
   },
   getTableData (state) {
-    return state.tableData.toJS()
+    return state.tableData
   },
   getSocketState (state) {
     return state.socketState
